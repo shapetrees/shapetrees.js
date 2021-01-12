@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "noImplicitThis": true,
+    "preserveConstEnums": true,
+    "lib": [ ],
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": false,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "noImplicitAny": true,
+    "declaration": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "stripInternal": true,
+    "pretty": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  }
+}
