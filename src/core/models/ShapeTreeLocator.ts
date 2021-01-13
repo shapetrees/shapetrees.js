@@ -4,21 +4,21 @@ import ShapeTreeVocabulary from '../vocabularies/ShapeTreeVocabulary';
 
 // @Getter @AllArgsConstructor
 export default class ShapeTreeLocator {
-    private rootShapeTree: String;
-    private shapeTree: String;
-    private shapeTreeRoot: String;
+    private rootShapeTree: string;
+    private shapeTree: string;
+    private shapeTreeRoot: string;
 
     public static getShapeTreeLocatorsFromGraph(shapeTreeMetadataGraph: Store): ShapeTreeLocator[] {
         const locators: ShapeTreeLocator[] = new Array();
 
         const hasShapeTreeLocatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null);
         for (let hasShapeTreeLocatorTriple: Triple in hasShapeTreeLocatorTriples) {
-            const locatorURI: String = hasShapeTreeLocatorTriple.getObject().getURI();
+            const locatorURI: string = hasShapeTreeLocatorTriple.getObject().getURI();
 
             const locatorTriples: Triple[] = shapeTreeMetadataGraph.find(DataFactory.namedNode(locatorURI), null, null);
-            let shapeTreeRoot: String = null;
-            let rootShapeTree: String = null;
-            let shapeTree: String = null;
+            let shapeTreeRoot: string = null;
+            let rootShapeTree: string = null;
+            let shapeTree: string = null;
             for (let locatorTriple: Triple in locatorTriples) {
                 switch (locatorTriple.getPredicate().getURI()) {
                     case ShapeTreeVocabulary.HAS_SHAPE_TREE:

@@ -32,7 +32,7 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
     }
 
     // @Override
-    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: List<URL>, focusNode: String, shapeTreeHint: URL, proposedResourceName: String, bodyGraph: Graph): URL /* throws IOException, URISyntaxException */ {
+    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: List<URL>, focusNode: string, shapeTreeHint: URL, proposedResourceName: string, bodyGraph: Graph): URL /* throws IOException, URISyntaxException */ {
         shapeTreeCommaDelimited: StringBuilder = new StringBuilder();
         if (shapeTreeURIs != null) {
             for (let shapeTreeURI: URL in shapeTreeURIs) {
@@ -41,12 +41,12 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
         }
 
         log.debug("Planting shape tree [Parent container={}], [Shape Trees={}], [FocusNode={}], [ShapeTreeHint={}], [ProposedResourceName={}]", parentContainer, shapeTreeCommaDelimited.toString(), focusNode, shapeTreeHint, proposedResourceName);
-        turtleString: String = GraphHelper.writeGraphToTurtleString(bodyGraph);
+        turtleString: string = GraphHelper.writeGraphToTurtleString(bodyGraph);
         return plantShapeTree(context, parentContainer, shapeTreeURIs, focusNode, shapeTreeHint, proposedResourceName, turtleString, "text/turtle");
     }
 
     // @Override
-    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: List<URL>, focusNode: String, shapeTreeHint: URL, proposedResourceName: String, bodyString: String, contentType: String): URL /* throws IOException, URISyntaxException */ {
+    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: List<URL>, focusNode: string, shapeTreeHint: URL, proposedResourceName: string, bodyString: string, contentType: string): URL /* throws IOException, URISyntaxException */ {
 
         client: OkHttpClient = ShapeTreeHttpClientHolder.getForConfig(getConfiguration(this._skipValidation));
 
@@ -71,14 +71,14 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
         response: Response = client.newCall(plantPost).execute();
         if (response.isSuccessful()) {
-            const locationHeader: String = response.header(HttpHeaders.LOCATION.getValue());
+            const locationHeader: string = response.header(HttpHeaders.LOCATION.getValue());
             if (locationHeader != null) {
                 return new URL(locationHeader);
             } else {
                 throw new IOException(response.code() + " No Location Header provided");
             }
         } else {
-            responseBodyString: String = null;
+            responseBodyString: string = null;
             try {
                 const body: ResponseBody = response.body();
                 if (body != null) {
@@ -91,7 +91,7 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
     }
 
     // @Override
-    public createDataInstance(context: ShapeTreeContext, parentContainer: URL, focusNode: String, shapeTreeHint: URL, proposedResourceName: String, isContainer: Boolean, bodyString: String, contentType: String): ShapeTreeResponse /* throws IOException */ {
+    public createDataInstance(context: ShapeTreeContext, parentContainer: URL, focusNode: string, shapeTreeHint: URL, proposedResourceName: string, isContainer: Boolean, bodyString: string, contentType: string): ShapeTreeResponse /* throws IOException */ {
         log.debug("Creating data instance {} in {} with hint {}", parentContainer, proposedResourceName, shapeTreeHint);
         const client: OkHttpClient = ShapeTreeHttpClientHolder.getForConfig(getConfiguration(this._skipValidation));
 
@@ -101,7 +101,7 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
         else
             bytes = new Array();
 
-        resourceURI: String = parentContainer.toString();
+        resourceURI: string = parentContainer.toString();
         if (!resourceURI.endsWith("/")) {
             resourceURI += "/";
         }
@@ -119,7 +119,7 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
     }
 
     // @Override
-    public updateDataInstance(context: ShapeTreeContext, resourceURI: URL, focusNode: String, shapeTreeHint: URL, bodyString: String, contentType: String): ShapeTreeResponse /* throws IOException */ {
+    public updateDataInstance(context: ShapeTreeContext, resourceURI: URL, focusNode: string, shapeTreeHint: URL, bodyString: string, contentType: string): ShapeTreeResponse /* throws IOException */ {
         const client: OkHttpClient = ShapeTreeHttpClientHolder.getForConfig(getConfiguration(this._skipValidation));
 
         let bytes: number[];
@@ -138,9 +138,9 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
     }
 
     // @Override
-    public updateDataInstanceWithPatch(context: ShapeTreeContext, resourceURI: URL, focusNode: String, shapeTreeHint: URL, bodyString: String): ShapeTreeResponse /* throws IOException */ {
+    public updateDataInstanceWithPatch(context: ShapeTreeContext, resourceURI: URL, focusNode: string, shapeTreeHint: URL, bodyString: string): ShapeTreeResponse /* throws IOException */ {
         const client: OkHttpClient = ShapeTreeHttpClientHolder.getForConfig(getConfiguration(this._skipValidation));
-        const contentType: String = "application/sparql-update";
+        const contentType: string = "application/sparql-update";
         const sparqlUpdateBytes: number[] = bodyString.getBytes();
 
         const patchBuilder: Request.Builder = new Request.Builder()
@@ -178,14 +178,14 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
         }
     }
 
-    private applyCommonHeaders(context: ShapeTreeContext, builder: Request.Builder, focusNode: String, shapeTreeHint: URL, isContainer: Boolean, proposedResourceName: String, contentType: String): void {
+    private applyCommonHeaders(context: ShapeTreeContext, builder: Request.Builder, focusNode: string, shapeTreeHint: URL, isContainer: Boolean, proposedResourceName: string, contentType: string): void {
 
         if (context.getAuthorizationHeaderValue() != null) {
             builder.addHeader(HttpHeaders.AUTHORIZATION.getValue(), context.getAuthorizationHeaderValue());
         }
 
         if (isContainer != null) {
-            const resourceTypeUri: String = Boolean.TRUE.equals(isContainer) ? "http://www.w3.org/ns/ldp#Container" : "http://www.w3.org/ns/ldp#Resource";
+            const resourceTypeUri: string = Boolean.TRUE.equals(isContainer) ? "http://www.w3.org/ns/ldp#Container" : "http://www.w3.org/ns/ldp#Resource";
             builder.addHeader(HttpHeaders.LINK.getValue(), "<" + resourceTypeUri + ">; rel=\"type\"");
         }
 
