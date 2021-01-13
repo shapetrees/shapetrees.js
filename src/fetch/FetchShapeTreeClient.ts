@@ -1,6 +1,9 @@
 import { URL } from 'url';
 import ShapeTreeClientConfiguration from './ShapeTreeClientConfiguration';
 import ShapeTreeContext from '../core/models/ShapeTreeContext';
+import ShapeTreeLocator from 'src/core/models/ShapeTreeLocator';
+import { IOException } from '../../todo/exceptions';
+import log from 'loglevel';
 
 export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
