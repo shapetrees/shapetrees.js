@@ -7,4 +7,6 @@ export default class ShapeTreeClientConfiguration {
         private useValidation: boolean,
         private skipSslValidation: boolean
     ) { }
+    public getUseValidation(): boolean { return this.useValidation; }
+    public getSkipSslValidation(): boolean { return this.skipSslValidation; }
 }

@@ -1,9 +1,10 @@
 import { URL } from 'url';
 import ShapeTreeClientConfiguration from './ShapeTreeClientConfiguration';
-import ShapeTreeContext from '../core/models/ShapeTreeContext';
+import ShapeTreeContext from '../../core/models/ShapeTreeContext';
 import ShapeTreeLocator from 'src/core/models/ShapeTreeLocator';
 import { IOException } from '../../todo/exceptions';
 import log from 'loglevel';
+import RemoteResource from './RemoteResource';
 
 export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
@@ -29,8 +30,8 @@ export default class OkHttpShapeTreeClient /* @@ implements ShapeTreeClient */ {
     // @Override
     public discoverShapeTree(context: ShapeTreeContext, targetContainer: URL): ShapeTreeLocator[] /* throws IOException */ {
         log.debug("Discovering Shape Trees present at {}", targetContainer);
-        targetContainerResource: RemoteResource = new RemoteResource(targetContainer, context.getAuthorizationHeaderValue());
-        targetContainerMetadataResource: RemoteResource = targetContainerResource.getMetadataResource(context.getAuthorizationHeaderValue());
+        const targetContainerResource: RemoteResource = new RemoteResource(targetContainer, context.getAuthorizationHeaderValue());
+        const targetContainerMetadataResource: RemoteResource = targetContainerResource.getMetadataResource(context.getAuthorizationHeaderValue());
         return ShapeTreeLocator.getShapeTreeLocatorsFromGraph(targetContainerMetadataResource.getGraph(targetContainerResource.getUri()));
     }
 
