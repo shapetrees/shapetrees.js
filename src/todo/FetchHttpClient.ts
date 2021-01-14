@@ -44,13 +44,13 @@ class Request {
 Request.Builder = RequestBuilder;
 
 class RequestBody {
-    text: string;
+    text: string | null;
     mediaType: string | undefined;
-    private constructor(text: string, mediaType?: string) {
+    private constructor(text: string | null, mediaType?: string) {
         this.text = text;
         this.mediaType = mediaType
     }
-    static create(text: string, mediaType?: string): RequestBody {
+    static create(text: string | null, mediaType?: string): RequestBody {
         return new RequestBody(text, mediaType)
     }
 }

@@ -44,9 +44,9 @@ export default class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     }
 
     // @Override
-    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string, shapeTreeHint: URL, proposedResourceName: string, bodyGraph: Store): URL;
-    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string, shapeTreeHint: URL, proposedResourceName: string, bodyString: string, contentType: string): URL;
-    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string, shapeTreeHint: URL, proposedResourceName: string, bodyString: string | Store, contentType?: string): URL /* throws IOException, URISyntaxException */ {
+    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string | null, shapeTreeHint: URL | null, proposedResourceName: string, bodyGraph: Store): URL;
+    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string | null, shapeTreeHint: URL | null, proposedResourceName: string, bodyString: string | null, contentType: string): URL;
+    public plantShapeTree(context: ShapeTreeContext, parentContainer: URL, shapeTreeURIs: URL[], focusNode: string | null, shapeTreeHint: URL | null, proposedResourceName: string, bodyString: Store | string | null, contentType?: string): URL /* throws IOException, URISyntaxException */ {
         if (bodyString instanceof Store) {
             let shapeTreeCommaDelimited: string = "";
             if (shapeTreeURIs != null) {
@@ -172,30 +172,30 @@ export default class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
         }
     }
 
-    private applyCommonHeaders(context: ShapeTreeContext, builder: RequestBuilder /* Request.Builder */, focusNode: string | null, shapeTreeHint: URL, isContainer: boolean | null, proposedResourceName: string | null, contentType: string | null): void {
+    private applyCommonHeaders(context: ShapeTreeContext, builder: RequestBuilder, focusNode: string | null, shapeTreeHint: URL | null, isContainer: boolean | null, proposedResourceName: string | null, contentType: string | null): void {
 
-        if (context.getAuthorizationHeaderValue() != null) {
+        if (context.getAuthorizationHeaderValue() !== null) {
             builder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue());
         }
 
-        if (isContainer != null) {
+        if (isContainer !== null) {
             const resourceTypeUri: string = isContainer ? "http://www.w3.org/ns/ldp#Container" : "http://www.w3.org/ns/ldp#Resource";
             builder.addHeader(HttpHeaders.LINK, "<" + resourceTypeUri + ">; rel=\"type\"");
         }
 
-        if (focusNode != null) {
+        if (focusNode !== null) {
             builder.addHeader(HttpHeaders.LINK, "<" + focusNode + ">; rel=\"" + LinkRelations.FOCUS_NODE + "\"");
         }
 
-        if (shapeTreeHint != null) {
+        if (shapeTreeHint !== null) {
             builder.addHeader(HttpHeaders.LINK, "<" + shapeTreeHint + ">; rel=\"" + LinkRelations.TARGET_SHAPETREE + "\"");
         }
 
-        if (proposedResourceName != null) {
+        if (proposedResourceName !== null) {
             builder.addHeader(HttpHeaders.SLUG, proposedResourceName);
         }
 
-        if (contentType != null) {
+        if (contentType !== null) {
             builder.addHeader(HttpHeaders.CONTENT_TYPE, contentType);
         }
     }
