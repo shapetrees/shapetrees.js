@@ -14,19 +14,23 @@ export default class HttpHeaderHelper {
      * @param headerValues Header values for Link headers
      * @return Map of values parsed using the Link Relation as the key
      */
-    public static parseLinkHeadersToMap(headerValues: string[]): Map<string, string[]> {
+    public static parseLinkHeadersToMap(headerValues: string[] | undefined): Map<string, string[]> {
         const linkHeaderMap: Map<string, string[]> = new Map();
-        for (let headerValue of headerValues) {
-            const matcher = HttpHeaderHelper.LINK_HEADER_PATTERN.exec(headerValue);
-            if (matcher && matcher.length >= 3) {
-                const uri: string = matcher[1];
-                const rel: string = matcher[2];
-                if (!linkHeaderMap.has(rel)) {
-                    linkHeaderMap.set(rel, new Array());
+        if (headerValues === undefined) {
+            log.warn("No Link: header to parse");
+        } else {
+            for (let headerValue of headerValues) {
+                const matcher = HttpHeaderHelper.LINK_HEADER_PATTERN.exec(headerValue);
+                if (matcher && matcher.length >= 3) {
+                    const uri: string = matcher[1];
+                    const rel: string = matcher[2];
+                    if (!linkHeaderMap.has(rel)) {
+                        linkHeaderMap.set(rel, new Array());
+                    }
+                    linkHeaderMap.get(rel)!!.push(uri);
+                } else {
+                    log.warn("Unable to parse link header: [{}]", headerValue);
                 }
-                linkHeaderMap.get(rel).push(uri);
-            } else {
-                log.warn("Unable to parse link header: [{}]", headerValue);
             }
         }
         return linkHeaderMap;

@@ -9,7 +9,7 @@ export default class ShapeTreeLocator {
     private shapeTree: string;
     private shapeTreeRoot: string;
 
-    public static getShapeTreeLocatorsFromGraph(shapeTreeMetadataGraph: Store | null): ShapeTreeLocator[] {
+    public static getShapeTreeLocatorsFromGraph(shapeTreeMetadataGraph: Store): ShapeTreeLocator[] {
         const locators: ShapeTreeLocator[] = new Array();
 
         const hasShapeTreeLocatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null);

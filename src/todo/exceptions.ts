@@ -22,8 +22,16 @@ class IOException extends RuntimeException {
     }
 }
 
+
+class NullPointerException extends RuntimeException {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 export {
     RuntimeException,
     IllegalStateException,
-    IOException
+    IOException,
+    NullPointerException
 }

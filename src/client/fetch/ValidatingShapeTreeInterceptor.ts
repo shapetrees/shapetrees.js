@@ -1,8 +1,11 @@
 /**
  * Interceptor used for client-side validation
  */
+
+import { Interceptor } from "src/todo/FetchHttpClient";
+
 // @Slf4j
-export default class ValidatingShapeTreeInterceptor /* implements Interceptor is an OkHttp thing */ {
+export default class ValidatingShapeTreeInterceptor implements Interceptor {
 
     private static POST: string = "POST";
     private static PUT: string = "PUT";

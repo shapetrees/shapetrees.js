@@ -25,8 +25,8 @@ describe("GitHubDeepTests", () => {
     */
     describe('plant test', () => { // the tests container
         it('plants', () => { // the single test
-            const str = new ShapeTreeResponse("foo");
-            expect(str.name).to.equal("foo");
+            // const str = new ShapeTreeResponse("foo");
+            // expect(str.name).to.equal("foo");
             // expect(X).to.be.false
             // expect(X).to.be.empty;
             // expect(X).to.be.an("object").to.have.property("p1").to.equal("v1");

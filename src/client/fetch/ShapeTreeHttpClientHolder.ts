@@ -1,5 +1,5 @@
 import { ShapeTreeException } from "src/core/exceptions";
-import FetchHttpClient from "src/todo/FetchHttpClient";
+import { FetchHttpClient } from "src/todo/FetchHttpClient";
 import ShapeTreeClientConfiguration from "./ShapeTreeClientConfiguration";
 import ValidatingShapeTreeInterceptor from "./ValidatingShapeTreeInterceptor";
 
@@ -37,7 +37,7 @@ export default class ShapeTreeHttpClientHolder {
     private static buildClientFromConfiguration(configuration: ShapeTreeClientConfiguration): FetchHttpClient /* throws NoSuchAlgorithmException, KeyManagementException */ {
         const clientBuilder /*: FetchHttpClient.Builder */ = ShapeTreeHttpClientHolder.baseClient.newBuilder();
         if (configuration.getUseValidation()) {
-            clientBuilder.interceptors().add(new ValidatingShapeTreeInterceptor());
+            clientBuilder.interceptors().push(new ValidatingShapeTreeInterceptor());
         }
         if (configuration.getSkipSslValidation()) { /*
             // Install the all-trusting trust manager

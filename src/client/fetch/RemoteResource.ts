@@ -6,12 +6,14 @@
 import { Store } from "n3";
 import { URL } from "url";
 import ShapeTreeClientConfiguration from "./ShapeTreeClientConfiguration";
-import { GraphHelper } from '../core/helpers/GraphHelper';
+import GraphHelper from '../../core/helpers/GraphHelper';
 import log from 'loglevel';
 import { HttpHeaders, LinkRelations } from "src/core/enums";
 import { ShapeTreeException } from "src/core/exceptions";
-import FetchHttpClient from "src/todo/FetchHttpClient";
+import { FetchHttpClient, Request, RequestBody, Response, ResponseBody } from "src/todo/FetchHttpClient";
 import ShapeTreeHttpClientHolder from "./ShapeTreeHttpClientHolder";
+import { IOException } from "src/todo/exceptions";
+import HttpHeaderHelper from "src/core/helpers/HttpHeaderHelper";
 
 // @Slf4j
 export default class RemoteResource {
@@ -33,18 +35,18 @@ export default class RemoteResource {
             let requestUri: URL;
             try {
                 requestUri = new URL(uriString);
-            } catch (ex: TypeError) {
-                throw new this.IOException("Request URI is not a value URI");
+            } catch (ex /* TypeError */) {
+                throw new IOException("Request URI is not a value URI");
             }
             this.uri = requestUri;
         }
         this.authorizationHeaderValue = authorizationHeaderValue;
-        dereferenceURI();
+        this.dereferenceURI();
     }
 
     public getUri(): URL /* throws IOException */ {
         if (this.invalidated) {
-            dereferenceURI();
+            this.dereferenceURI();
         }
         return this.uri;
     }
@@ -58,7 +60,7 @@ export default class RemoteResource {
 
         if (this.invalidated) {
             log.debug("RemoteResource#getBody({}) - Resource Invalidated - Refreshing", this.uri);
-            dereferenceURI();
+            this.dereferenceURI();
         }
 
         return this.rawBody;
@@ -70,11 +72,11 @@ export default class RemoteResource {
 
         if (this.invalidated) {
             log.debug("RemoteResource#getGraph({}) - Resource Invalidated - Refreshing", this.uri);
-            dereferenceURI();
+            this.dereferenceURI();
         }
 
         if (this.parsedGraph == null) {
-            this.parsedGraph = GraphHelper.readStringIntoGraph(baseURI, this.rawBody, getFirstHeaderByName(HttpHeaders.CONTENT_TYPE));
+            this.parsedGraph = GraphHelper.readStringIntoGraph(baseURI, this.rawBody, this.getFirstHeaderByName(HttpHeaders.CONTENT_TYPE) || 'text/turtle');
         }
         return this.parsedGraph;
     }
@@ -95,7 +97,7 @@ export default class RemoteResource {
     public getFirstHeaderByName(headerName: string): string | null /* throws IOException */ {
         if (this.invalidated) {
             log.debug("RemoteResource#getFirstHeaderByName({}) - Resource Invalidated - Refreshing", this.uri);
-            dereferenceURI();
+            this.dereferenceURI();
         }
 
         const headerValues: string[] | undefined = this.responseHeaders.get(headerName);
@@ -106,7 +108,7 @@ export default class RemoteResource {
         return headerValues[0];
     }
 
-    public updateGraph(updatedGraph: Store, refreshResourceAfterUpdate: string, authorizationHeaderValue: boolean): void /* throws IOException */ {
+    public updateGraph(updatedGraph: Store, refreshResourceAfterUpdate: string, authorizationHeaderValue: string): void /* throws IOException */ {
         log.debug("RemoteResource#updateGraph({})", this.uri);
 
         if (this.invalidated) {
@@ -118,19 +120,19 @@ export default class RemoteResource {
             throw new ShapeTreeException(500, "'updateGraph' cannot serialize update graph - ");
 
         const httpClient: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.clientConfiguration);
-        const requestBuilder /*:Request.Builder*/ = new Request.Builder()
+        const requestBuilder/*: Request.Builder*/ = new Request.Builder()
             .url(this.uri.href)
             .addHeader(HttpHeaders.CONTENT_TYPE, "text/turtle")
-            .put(RequestBody.create(body, MediaType.get("text/turtle")));
+            .put(RequestBody.create(body, "text/turtle"));
 
         if (authorizationHeaderValue != null) {
-            requestBuilder.addHeader(HttpHeaders.AUTHORIZATION.getValue(), authorizationHeaderValue);
+            requestBuilder.addHeader(HttpHeaders.AUTHORIZATION, authorizationHeaderValue);
         }
 
         httpClient.newCall(requestBuilder.build()).execute();
 
         if (refreshResourceAfterUpdate) {
-            dereferenceURI();
+            this.dereferenceURI();
         } else {
             this.invalidated = true;
             log.debug("RemoteResource#updateGraph({}) - Invalidating Resource", this.uri);
@@ -147,7 +149,7 @@ export default class RemoteResource {
             log.error("The resource {} does not contain a link header of {}", this.getUri(), LinkRelations.SHAPETREE);
             throw new ShapeTreeException(500, "No Link header with relation of " + LinkRelations.SHAPETREE + " found");
         }
-        let metaDataURIString: string = this.parsedLinkHeaders.get(LinkRelations.SHAPETREE).stream().findFirst().orElse(null);
+        let metaDataURIString: string | null = this.parsedLinkHeaders.get(LinkRelations.SHAPETREE)!![0] || null;
         if (metaDataURIString != null && metaDataURIString.startsWith("/")) {
             // If the header value doesn't include scheme/host, prefix it with the scheme & host from container
             const shapeTreeContainerURI: URL = this.getUri();
@@ -182,7 +184,7 @@ export default class RemoteResource {
 
         try {
             const response: Response = httpClient.newCall(request).execute();
-            parseResponseToRemoteResource(response);
+            this.parseResponseToRemoteResource(response);
             this.invalidated = false;
         } catch (e /*Exception*/) {
             log.error("Error dereferencing URI", e);
@@ -193,18 +195,18 @@ export default class RemoteResource {
         this._exists = response.code() < 400;
 
         // Parse the headers for ease of use later
-        this.responseHeaders = response.headers().toMultimap();
+        this.responseHeaders = response.headers();
 
         // We especially care about Link headers which require extra parsing of the rel values
         if (this.responseHeaders.get(HttpHeaders.LINK) != null) {
-            this.parsedLinkHeaders = HttpHeaderHelper.parseLinkHeadersToMap(response.headers(HttpHeaders.LINK));
+            this.parsedLinkHeaders = HttpHeaderHelper.parseLinkHeadersToMap(response.headers().get(HttpHeaders.LINK));
         } else {
-            this.parsedLinkHeaders = new HashMap<>();
+            this.parsedLinkHeaders = new Map();
         }
 
         // Save raw body
         try {
-            const body: ResponseBody = response.body()
+            const body: ResponseBody | null = response.body()
             if (body != null) {
                 this.rawBody = body.string();
             }
