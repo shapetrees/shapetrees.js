@@ -25,3 +25,4 @@ default \(public\) +\([^ ]+\) +\([a-zA-Z0-9_]+\)(\([^)]*\)) → \1 \3(\4): \2
 
 * mapped ConcurrentHashMap to Map
 
+* used string concatonation for StringBuilder
