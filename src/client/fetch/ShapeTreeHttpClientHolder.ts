@@ -1,5 +1,5 @@
-import { ShapeTreeException } from "src/core/exceptions";
-import { FetchHttpClient } from "src/todo/FetchHttpClient";
+import { ShapeTreeException } from "../../core/exceptions";
+import { FetchHttpClient } from "../../todo/FetchHttpClient";
 import ShapeTreeClientConfiguration from "./ShapeTreeClientConfiguration";
 import ValidatingShapeTreeInterceptor from "./ValidatingShapeTreeInterceptor";
 

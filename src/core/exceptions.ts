@@ -1,4 +1,4 @@
-import { IOException } from "src/todo/exceptions";
+import { IOException } from "../todo/exceptions";
 
 // @Getter @AllArgsConstructor
 class ShapeTreeException extends IOException {

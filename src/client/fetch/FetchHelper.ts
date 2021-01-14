@@ -1,12 +1,12 @@
-import ShapeTreeResource from "src/core/ShapeTreeResource";
-import { Response, ResponseBody } from "src/todo/FetchHttpClient";
+import ShapeTreeResource from "../../core/ShapeTreeResource";
+import { Response, ResponseBody } from "../../todo/FetchHttpClient";
 import { URL } from "url";
 import { NullPointerException } from "../../todo/exceptions";
 import log from 'loglevel';
-import { HttpHeaders, LinkRelations } from "src/core/enums";
-import ShapeTreeResponse from "src/core/ShapeTreeResponse";
-import HttpHeaderHelper from "src/core/helpers/HttpHeaderHelper";
-import { LdpVocabulary } from "src/core/vocabularies";
+import { HttpHeaders, LinkRelations } from "../../core/enums";
+import ShapeTreeResponse from "../../core/ShapeTreeResponse";
+import HttpHeaderHelper from "../../core/helpers/HttpHeaderHelper";
+import { LdpVocabulary } from "../../core/vocabularies";
 
 // @Slf4j
 export default class FetchHelper {

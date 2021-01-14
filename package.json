@@ -27,6 +27,7 @@
     "@types/node": "^14.14.20",
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
+    "superagent-proxy": "^2.1.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   },

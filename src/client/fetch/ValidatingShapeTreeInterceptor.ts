@@ -2,7 +2,7 @@
  * Interceptor used for client-side validation
  */
 
-import { Interceptor } from "src/todo/FetchHttpClient";
+import { Interceptor } from "../../todo/FetchHttpClient";
 
 // @Slf4j
 export default class ValidatingShapeTreeInterceptor implements Interceptor {

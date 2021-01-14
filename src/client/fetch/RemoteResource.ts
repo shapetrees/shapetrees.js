@@ -8,12 +8,12 @@ import { URL } from "url";
 import ShapeTreeClientConfiguration from "./ShapeTreeClientConfiguration";
 import GraphHelper from '../../core/helpers/GraphHelper';
 import log from 'loglevel';
-import { HttpHeaders, LinkRelations } from "src/core/enums";
-import { ShapeTreeException } from "src/core/exceptions";
-import { FetchHttpClient, Request, RequestBody, Response, ResponseBody } from "src/todo/FetchHttpClient";
+import { HttpHeaders, LinkRelations } from "../../core/enums";
+import { ShapeTreeException } from "../../core/exceptions";
+import { FetchHttpClient, Request, RequestBody, Response, ResponseBody } from "../../todo/FetchHttpClient";
 import ShapeTreeHttpClientHolder from "./ShapeTreeHttpClientHolder";
-import { IOException } from "src/todo/exceptions";
-import HttpHeaderHelper from "src/core/helpers/HttpHeaderHelper";
+import { IOException } from "../../todo/exceptions";
+import HttpHeaderHelper from "../../core/helpers/HttpHeaderHelper";
 
 // @Slf4j
 export default class RemoteResource {

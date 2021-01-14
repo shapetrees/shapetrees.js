@@ -1,16 +1,16 @@
 import { URL } from 'url';
 import ShapeTreeClientConfiguration from './ShapeTreeClientConfiguration';
 import ShapeTreeContext from '../../core/models/ShapeTreeContext';
-import ShapeTreeLocator from 'src/core/models/ShapeTreeLocator';
+import ShapeTreeLocator from '../../core/models/ShapeTreeLocator';
 import { IOException } from '../../todo/exceptions';
 import log from 'loglevel';
 import RemoteResource from './RemoteResource';
 import { Store } from 'n3';
-import GraphHelper from 'src/core/helpers/GraphHelper';
-import { FetchHttpClient, Request, RequestBody, RequestBuilder, Response, ResponseBody } from 'src/todo/FetchHttpClient';
+import GraphHelper from '../../core/helpers/GraphHelper';
+import { FetchHttpClient, Request, RequestBody, RequestBuilder, Response, ResponseBody } from '../../todo/FetchHttpClient';
 import ShapeTreeHttpClientHolder from './ShapeTreeHttpClientHolder';
-import { HttpHeaders, LinkRelations } from 'src/core/enums';
-import ShapeTreeResponse from 'src/core/ShapeTreeResponse';
+import { HttpHeaders, LinkRelations } from '../../core/enums';
+import ShapeTreeResponse from '../../core/ShapeTreeResponse';
 import FetchHelper from './FetchHelper';
 
 export default class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
