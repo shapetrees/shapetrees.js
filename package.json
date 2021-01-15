@@ -7,7 +7,7 @@
     "build": "tsc --build . --verbose",
     "watch": "tsc --build --watch .",
     "test": "ts-mocha --paths 'tests/**/*.ts'",
-    "test:watch": "mocha -w -r ts-node/register 'tests/**/*.ts'",
+    "test:watch": "ts-mocha --paths 'tests/**/*.ts' -w --watch-extensions ts",
     "lint": "eslint src/**/*.ts"
   },
   "repository": {
