@@ -1,21 +1,22 @@
 enum HttpHeaders {
-    ACCEPT = "Accept",
-    AUTHORIZATION = "Authorization",
-    CONTENT_TYPE = "Content-Type",
-    LINK = "Link",
-    LOCATION = "Location",
-    SLUG = "Slug",
-    INTEROP_ORIGINATOR = "InteropOrigin",
-    INTEROP_WEBID = "InteropWebID"
+    ACCEPT = 'Accept',
+    AUTHORIZATION = 'Authorization',
+    CONTENT_TYPE = 'Content-Type',
+    LINK = 'Link',
+    LOCATION = 'Location',
+    SLUG = 'Slug',
+    INTEROP_ORIGINATOR = 'InteropOrigin',
+    INTEROP_WEBID = 'InteropWebID'
 }
 
 enum LinkRelations {
-    DESCRIBED_BY = "describedby",
-    FOCUS_NODE = "http://shapetrees.org/#FocusNode",
-    SHAPETREE = "http://shapetrees.org/#ShapeTree",
-    TARGET_SHAPETREE = "http://shapetrees.org/#TargetShapeTree",
-    TYPE = "type",
-    ACL = "acl"
+    DESCRIBED_BY = 'describedby',
+    FOCUS_NODE = 'http://shapetrees.org/#FocusNode',
+    SHAPETREE = 'http://shapetrees.org/#ShapeTree',
+    TARGET_SHAPETREE = 'http://shapetrees.org/#TargetShapeTree',
+    TYPE = 'type',
+    ACL = 'acl',
+    SOMETHING = 'this',
 }
 
 enum RecursionMethods {
@@ -30,8 +31,8 @@ enum ShapeTreeResourceType {
 }
 
 export {
-    HttpHeaders,
-    LinkRelations,
-    RecursionMethods,
-    ShapeTreeResourceType
-}
+  HttpHeaders,
+  LinkRelations,
+  RecursionMethods,
+  ShapeTreeResourceType,
+};

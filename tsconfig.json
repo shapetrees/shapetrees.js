@@ -2,10 +2,17 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@core/*": ["src/core/*"],
+      "@helpers/*": ["src/core/helpers/*"],
+      "@models/*": ["src/core/models/*"],
+      "@vocabs/*": ["src/core/vocabularies/*"],
+      "@todo/*": ["src/todo/*"],
+    }
   },
   "exclude": [
     "./node_modules/",
     "./dist/"
-  ]
+  ],
 }

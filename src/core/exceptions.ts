@@ -1,14 +1,11 @@
-import { IOException } from "../todo/exceptions";
+import { IOException } from '@todo/exceptions';
 
 // @Getter @AllArgsConstructor
-class ShapeTreeException extends IOException {
+export class ShapeTreeException extends IOException {
     private statusCode: number;
+
     constructor(statusCode: number, message: string) {
-        super(message);
-        this.statusCode = statusCode;
+      super(message);
+      this.statusCode = statusCode;
     }
 }
-
-export {
-    ShapeTreeException
-};

@@ -1,7 +1,7 @@
-import { ShapeTreeException } from "../../core/exceptions";
-import { FetchHttpClient } from "../../todo/FetchHttpClient";
-import ShapeTreeClientConfiguration from "./ShapeTreeClientConfiguration";
-import ValidatingShapeTreeInterceptor from "./ValidatingShapeTreeInterceptor";
+import { ShapeTreeException } from '@core/exceptions';
+import { FetchHttpClient } from '@todo/FetchHttpClient';
+import { ShapeTreeClientConfiguration } from './ShapeTreeClientConfiguration';
+import { ValidatingShapeTreeInterceptor } from './ValidatingShapeTreeInterceptor';
 
 /**
  * OkHttp documentation (https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/#okhttpclients-should-be-shared)
@@ -10,8 +10,9 @@ import ValidatingShapeTreeInterceptor from "./ValidatingShapeTreeInterceptor";
  *
  * A static map of client references are managed per configuration which can be easily retrieved
  */
-export default class ShapeTreeHttpClientHolder {
+export class ShapeTreeHttpClientHolder {
     private static baseClient: FetchHttpClient = new FetchHttpClient();
+
     private static clientMap: Map<ShapeTreeClientConfiguration, FetchHttpClient> = new Map();
 
     /**
@@ -22,24 +23,25 @@ export default class ShapeTreeHttpClientHolder {
      * @throws ShapeTreeException ShapeTreeException
      */
     public static /* @@ synchronized */ getForConfig(configuration: ShapeTreeClientConfiguration): FetchHttpClient /* throws ShapeTreeException */ {
-        if (ShapeTreeHttpClientHolder.clientMap.has(configuration)) {
-            return ShapeTreeHttpClientHolder.clientMap.get(configuration)!!;
-        }
-        try {
-            const client: FetchHttpClient = this.buildClientFromConfiguration(configuration);
-            ShapeTreeHttpClientHolder.clientMap.set(configuration, client);
-            return client;
-        } catch (ex /* Exception */) {
-            throw new ShapeTreeException(500, ex.getMessage());
-        }
+      if (ShapeTreeHttpClientHolder.clientMap.has(configuration)) {
+        return ShapeTreeHttpClientHolder.clientMap.get(configuration)!!;
+      }
+      try {
+        const client: FetchHttpClient = this.buildClientFromConfiguration(configuration);
+        ShapeTreeHttpClientHolder.clientMap.set(configuration, client);
+        return client;
+      } catch (ex /* Exception */) {
+        throw new ShapeTreeException(500, ex.getMessage());
+      }
     }
 
-    private static buildClientFromConfiguration(configuration: ShapeTreeClientConfiguration): FetchHttpClient /* throws NoSuchAlgorithmException, KeyManagementException */ {
-        const clientBuilder /*: FetchHttpClient.Builder */ = ShapeTreeHttpClientHolder.baseClient.newBuilder();
-        if (configuration.getUseValidation()) {
-            clientBuilder.interceptors().push(new ValidatingShapeTreeInterceptor());
-        }
-        if (configuration.getSkipSslValidation()) { /*
+    /* throws NoSuchAlgorithmException, KeyManagementException */
+    private static buildClientFromConfiguration(configuration: ShapeTreeClientConfiguration): FetchHttpClient {
+      const clientBuilder /*: FetchHttpClient.Builder */ = ShapeTreeHttpClientHolder.baseClient.newBuilder();
+      if (configuration.getUseValidation()) {
+        clientBuilder.interceptors().push(new ValidatingShapeTreeInterceptor());
+      }
+      if (configuration.getSkipSslValidation()) { /*
             // Install the all-trusting trust manager
             final SSLContext sslContext = SSLContext.getInstance("SSL");
             TrustManager[] trustAllCerts = getTrustAllCertsManager();
@@ -50,10 +52,10 @@ export default class ShapeTreeHttpClientHolder {
             clientBuilder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
                 .hostnameVerifier(getTrustAllHostnameVerifier());
         */ }
-        return clientBuilder.build();
+      return clientBuilder.build();
     }
 
-    /*
+  /*
     private static TrustManager[] getTrustAllCertsManager() {
         // Create a trust manager that does not validate certificate chains
         return new TrustManager[] {
@@ -78,5 +80,4 @@ export default class ShapeTreeHttpClientHolder {
         return (hostname, session) -> true;
     }
     */
-
 }

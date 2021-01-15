@@ -2,17 +2,19 @@
  * Interceptor used for client-side validation
  */
 
-import { Interceptor } from "../../todo/FetchHttpClient";
+import { Interceptor } from '@todo/FetchHttpClient';
 
 // @Slf4j
-export default class ValidatingShapeTreeInterceptor implements Interceptor {
+export class ValidatingShapeTreeInterceptor implements Interceptor {
+    private static POST: string = 'POST';
 
-    private static POST: string = "POST";
-    private static PUT: string = "PUT";
-    private static PATCH: string = "PATCH";
-    private static DELETE: string = "DELETE";
+    private static PUT: string = 'PUT';
 
-    /**
+    private static PATCH: string = 'PATCH';
+
+    private static DELETE: string = 'DELETE';
+
+  /**
      * Key method on Interceptor class which is implemented on an intercepted HTTP call.
      * Responsible for initializing a shape tree validation handler based on the HTTP method that
      * was intercepted.

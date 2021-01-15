@@ -7,7 +7,8 @@
     "build": "tsc --build . --verbose",
     "watch": "tsc --build --watch .",
     "test": "mocha -r ts-node/register 'tests/**/*.ts'",
-    "test-watch": "mocha -w -r ts-node/register 'tests/**/*.ts'"
+    "test:watch": "mocha -w -r ts-node/register 'tests/**/*.ts'",
+    "lint": "eslint src/**/*.ts"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,14 @@
     "@types/mocha": "^8.2.0",
     "@types/n3": "^1.4.4",
     "@types/node": "^14.14.20",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.13.0",
     "chai": "^4.2.0",
+    "eslint": "^7.17.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-import-resolver-typescript": "^2.3.0",
+    "eslint-plugin-import": "^2.22.1",
+    "husky": "^4.3.7",
     "mocha": "^8.2.1",
     "superagent-proxy": "^2.1.0",
     "ts-node": "^9.1.1",
@@ -36,5 +44,10 @@
     "mockttp": "^1.0.4",
     "n3": "^1.7.0",
     "superagent": "^6.1.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
   }
 }
