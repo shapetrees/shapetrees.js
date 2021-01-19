@@ -36,12 +36,13 @@ describe('GitHubDeepTests', () => {
     it('plantGitRootCreatesStatics', async () => { // the single test
       const u = mockServer.urlFor(data);
       await mockServer.get(u);
-      shapeTreeClient.plantShapeTree(
+      await shapeTreeClient.plantShapeTree(
         context,
         u,
         mockServer.urlFor('/static/shapetrees/github-deep/shapetree#root'),
         null, null, 'Git', null, TEXT_TURTLE,
       );
+      console.log('DONE')
       // const str = new ShapeTreeResponse('foo');
       // expect(str.name).to.equal('foo');
       // expect(X).to.be.false

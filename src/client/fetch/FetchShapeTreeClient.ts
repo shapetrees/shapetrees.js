@@ -63,7 +63,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
   // bodyString: string | null, contentType: string): URL;
 
   // eslint-disable-next-line consistent-return
-  public plantShapeTree(
+  public async plantShapeTree(
     context: ShapeTreeContext,
     parentContainer: URL,
     shapeTreeURIs: URL[],
@@ -104,7 +104,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
       .post(RequestBody.create(bodyString))
       .build();
 
-    const response: Response = client.newCall(plantPost).execute();
+    const response: Response = await client.newCall(plantPost).execute();
     if (response.isSuccessful()) {
       const locationHeader: string | null = response.header(HttpHeaders.LOCATION);
       if (locationHeader !== null) {
@@ -125,7 +125,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
   }
 
   // @Override
-  public createDataInstance(
+  public async createDataInstance(
     context: ShapeTreeContext,
     parentContainer: URL,
     focusNode: string,
@@ -134,7 +134,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     isContainer: boolean,
     bodyString: string,
     contentType: string,
-  ): ShapeTreeResponse /* throws IOException */ {
+  ): Promise<ShapeTreeResponse> /* throws IOException */ {
     log.debug('Creating data instance {} in {} with hint {}', parentContainer, proposedResourceName, shapeTreeHint);
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
@@ -152,18 +152,18 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     // proposed resource is name is nulled since a Slug will not be used
     this.applyCommonHeaders(context, putBuilder, focusNode, shapeTreeHint, isContainer, null, contentType);
 
-    return FetchHelper.mapFetchResponseToShapeTreeResponse(client.newCall(putBuilder.build()).execute());
+    return FetchHelper.mapFetchResponseToShapeTreeResponse(await client.newCall(putBuilder.build()).execute());
   }
 
   // @Override
-  public updateDataInstance(
+  public async updateDataInstance(
     context: ShapeTreeContext,
     resourceURI: URL,
     focusNode: string,
     shapeTreeHint: URL,
     bodyString: string,
     contentType: string,
-  ): ShapeTreeResponse /* throws IOException */ {
+  ): Promise<ShapeTreeResponse> /* throws IOException */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
     const putBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
@@ -172,17 +172,17 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
     this.applyCommonHeaders(context, putBuilder, focusNode, shapeTreeHint, null, null, contentType);
 
-    return FetchHelper.mapFetchResponseToShapeTreeResponse(client.newCall(putBuilder.build()).execute());
+    return FetchHelper.mapFetchResponseToShapeTreeResponse(await client.newCall(putBuilder.build()).execute());
   }
 
   // @Override
-  public updateDataInstanceWithPatch(
+  public async updateDataInstanceWithPatch(
     context: ShapeTreeContext,
     resourceURI: URL,
     focusNode: string,
     shapeTreeHint: URL,
     bodyString: string,
-  ): ShapeTreeResponse /* throws IOException */ {
+  ): Promise<ShapeTreeResponse> /* throws IOException */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
     const contentType: string = 'application/sparql-update';
 
@@ -192,11 +192,11 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
     this.applyCommonHeaders(context, patchBuilder, focusNode, shapeTreeHint, null, null, contentType);
 
-    return FetchHelper.mapFetchResponseToShapeTreeResponse(client.newCall(patchBuilder.build()).execute());
+    return FetchHelper.mapFetchResponseToShapeTreeResponse(await client.newCall(patchBuilder.build()).execute());
   }
 
   // @Override
-  public deleteDataInstance(context: ShapeTreeContext, resourceURI: URL, shapeTreeURI: URL): ShapeTreeResponse /* throws IOException */ {
+  public async deleteDataInstance(context: ShapeTreeContext, resourceURI: URL, shapeTreeURI: URL): Promise<ShapeTreeResponse> /* throws IOException */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
     const deleteBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
@@ -205,7 +205,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
     this.applyCommonHeaders(context, deleteBuilder, null, shapeTreeURI, null, null, null);
 
-    return FetchHelper.mapFetchResponseToShapeTreeResponse(client.newCall(deleteBuilder.build()).execute());
+    return FetchHelper.mapFetchResponseToShapeTreeResponse(await client.newCall(deleteBuilder.build()).execute());
   }
 
   // @Override

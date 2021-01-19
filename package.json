@@ -26,6 +26,7 @@
     "@types/mocha": "^8.2.0",
     "@types/n3": "^1.4.4",
     "@types/node": "^14.14.20",
+    "@types/node-fetch": "^2.5.8",
     "@typescript-eslint/eslint-plugin": "^4.13.0",
     "@typescript-eslint/parser": "^4.13.0",
     "chai": "^4.2.0",
@@ -45,6 +46,7 @@
     "loglevel": "^1.7.1",
     "mockttp": "^1.0.4",
     "n3": "^1.7.0",
+    "node-fetch": "^2.6.1",
     "superagent": "^6.1.0"
   },
   "husky": {

@@ -169,7 +169,7 @@ export class RemoteResource {
       return metaDataURIString;
     }
 
-    private dereferenceURI(): void /* throws IOException */ {
+    private async dereferenceURI(): Promise<void> /* throws IOException */ {
       log.debug('RemoteResource#dereferencingURI({})', this.uri);
 
       const httpClient: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.clientConfiguration);
@@ -183,7 +183,7 @@ export class RemoteResource {
       const request /*: Request */ = requestBuilder.build();
 
       try {
-        const response: Response = httpClient.newCall(request).execute();
+        const response: Response = await httpClient.newCall(request).execute();
         this.parseResponseToRemoteResource(response);
         this.invalidated = false;
       } catch (e /* Exception */) {
