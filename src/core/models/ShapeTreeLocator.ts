@@ -10,18 +10,17 @@ export class ShapeTreeLocator {
     private shapeTreeRoot: string;
 
     public static getShapeTreeLocatorsFromGraph(shapeTreeMetadataGraph: Store): ShapeTreeLocator[] {
-      const locators = new Array<ShapeTreeLocator>();
+      const locators: ShapeTreeLocator[] = new Array();
 
-      // eslint-disable-next-line max-len
-      const hasShapeTreeLocatorTriples = shapeTreeMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null);
-      for (const hasShapeTreeLocatorTriple of hasShapeTreeLocatorTriples) {
+      const hasShapeTreeLocatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null);
+      for (let hasShapeTreeLocatorTriple of hasShapeTreeLocatorTriples) {
         const locatorURI: string = hasShapeTreeLocatorTriple.object.value;
 
-        const locatorTriples = shapeTreeMetadataGraph.getQuads(DataFactory.namedNode(locatorURI), null, null, null);
-        let shapeTreeRoot: string | undefined;
-        let rootShapeTree: string | undefined;
-        let shapeTree: string | undefined;
-        for (const locatorTriple of locatorTriples) {
+        const locatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(DataFactory.namedNode(locatorURI), null, null, null);
+        let shapeTreeRoot: string | null = null;
+        let rootShapeTree: string | null = null;
+        let shapeTree: string | null = null;
+        for (let locatorTriple of locatorTriples) {
           switch (locatorTriple.predicate.value) {
             case ShapeTreeVocabulary.HAS_SHAPE_TREE:
               shapeTree = locatorTriple.object.value;
@@ -33,15 +32,15 @@ export class ShapeTreeLocator {
               rootShapeTree = locatorTriple.object.value;
               break;
             default:
-              throw new IllegalStateException(`Unexpected value: ${locatorTriple.predicate.value}`);
+              throw new IllegalStateException("Unexpected value: " + locatorTriple.predicate.value);
           }
         }
-        if (rootShapeTree === undefined || shapeTree === undefined || shapeTreeRoot === undefined) {
+        if (rootShapeTree === null || shapeTree === null || shapeTreeRoot === null) {
           throw new IllegalStateException(`ShapeTree ${locatorURI} is incomplete: rootShapeTree: ${rootShapeTree}, shapeTree: ${shapeTree}, shapeTreeRoot: ${shapeTreeRoot}`);
         }
         locators.push(new ShapeTreeLocator(/* rootShapeTree, shapeTree, shapeTreeRoot */));
       }
 
       return locators;
-    }
+  }
 }

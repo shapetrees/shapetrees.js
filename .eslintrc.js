@@ -17,6 +17,7 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
+    'no-console': 'off', // @@ turn on when done printf debugging
     indent: ['error', 2, { SwitchCase: 1 }],
     'no-unused-vars': 'off',
     'no-shadow': 'off',

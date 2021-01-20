@@ -108,14 +108,13 @@ class FetchHttpClient {
 FetchHttpClient.Builder = FetchClientBuilder;
 
 class HttpCall {
-  constructor(public client: FetchHttpClient, public request: Request) {
-  }
+  constructor(public client: FetchHttpClient, public request: Request) { }
 
   // eslint-disable-next-line class-methods-use-this
   async execute(): Promise<Response> {
     const headers: { [key: string]: string; } = {};
     for (const [key, val] of this.request.headers) {
-      headers[key] = val;
+      headers[key] = val; // @@ should split on ',' for all comma list headers?
     }
     const parms = {
       method: this.request.method,
@@ -126,7 +125,7 @@ class HttpCall {
       const resp = await fetch(this.request.url, parms);
       return new Response(resp, this.request);
     } catch (e) {
-      // console.warn(`${this.request.method}ing ${this.request.url}`, e);
+      console.warn(`${this.request.method}ing ${this.request.url}`, e);
       throw new IOException(`${this.request.method}ing ${this.request.url}`, e);
     }
   }
@@ -137,18 +136,21 @@ class Response {
 
   constructor(public resp: any, public req: Request) {
     this._code = resp.status;
+    for (const [h, v] of resp.headers.entries()) {
+      this._headers.set(h, [v]);
+    }
   }
 
   code(): number { return this._code; }
 
   isSuccessful(): boolean { return this._code.toString().startsWith('2'); }
 
-  _headers: Map<string, string[]>;
+  _headers: Map<string, string[]> = new Map();
 
   headers() { return this._headers; }
 
   header(key: string, _default?: string): string | null {
-    const list = this._headers.get(key);
+    const list = this._headers.get(key.toLowerCase());
     return list === undefined || list.length > 1
       ? _default || null
       : list[0];
