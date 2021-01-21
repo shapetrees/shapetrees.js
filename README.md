@@ -39,3 +39,6 @@ default \(public\) +\([^ ]+\) +\([a-zA-Z0-9_]+\)(\([^)]*\)) → \1 \3(\4): \2
 * mapped classes like LdpVocabulary to enums
 
 * merged contents of `exceptions` and `vocabularies` to single files.
+
+* @getter/@setter directives should be checked for simple public data interface.
+

@@ -15,7 +15,7 @@ export class FetchHelper {
      * @param headers Multi-map representation of headers
      * @return Fetch Headers object
      */
-  public static convertHeaders(headers: Map<String, string[]>): Map<String, string[]> {
+  public static convertHeaders(headers: Map<string, string[]>): Map<string, string[]> {
     return headers;
   }
 
@@ -26,7 +26,7 @@ export class FetchHelper {
      * @param requestHeaders Request headers used in request associated with response
      * @return ShapeTreeResource instance with contents and response headers from response
      */
-  public static mapFetchResponseToShapeTreeResource(response: Response, requestURI: URL, requestHeaders: Map<String, string[]>): ShapeTreeResource {
+  public static mapFetchResponseToShapeTreeResource(response: Response, requestURI: URL, requestHeaders: Map<string, string[]>): ShapeTreeResource {
     const shapeTreeResource: ShapeTreeResource = new ShapeTreeResource();
 
     shapeTreeResource.setExists(response.isSuccessful());
@@ -68,8 +68,8 @@ export class FetchHelper {
     return shapeTreeResponse;
   }
 
-  private static isContainerFromHeaders(requestHeaders: Map<String, string[]>): boolean {
-    const parsedLinkHeaders: Map<String, string[]> = HttpHeaderHelper.parseLinkHeadersToMap(requestHeaders.get(HttpHeaders.LINK));
+  private static isContainerFromHeaders(requestHeaders: Map<string, string[]>): boolean {
+    const parsedLinkHeaders: Map<string, string[]> = HttpHeaderHelper.parseLinkHeadersToMap(requestHeaders.get(HttpHeaders.LINK));
 
     if (parsedLinkHeaders.get(LinkRelations.TYPE) != null) {
       return parsedLinkHeaders.get(LinkRelations.TYPE)!!.find((v) => v === `${LdpVocabulary.CONTAINER}`) !== undefined

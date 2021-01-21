@@ -5,12 +5,12 @@ class Throwable extends Error {
 }
 
 class RuntimeException extends Throwable {
-    cause: Throwable | undefined;
+  cause: Throwable | undefined;
 
-    constructor(message: string, cause?: Throwable | undefined) {
-      super(message);
-      this.cause = cause;
-    }
+  constructor(message: string, cause?: Throwable | undefined) {
+    super(message);
+    this.cause = cause;
+  }
 }
 
 class IllegalStateException extends RuntimeException {
@@ -28,6 +28,12 @@ class IOException extends RuntimeException {
 class NullPointerException extends RuntimeException {
   constructor(message: string) {
     super(message);
+  }
+}
+
+class ProgramFlowException extends RuntimeException { // @@ probably reflects my lack of understanding of typescript -- ericP
+  constructor() {
+    super('Should not arrive here');
   }
 }
 

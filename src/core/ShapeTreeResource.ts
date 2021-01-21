@@ -23,8 +23,8 @@ export class ShapeTreeResource {
     setAttributes(attributes: Map<String, string[]>) { this.attributes = attributes; }
 
     public getFirstAttributeValue(attributeName: string): string | null {
-      if (!this.attributes.has(attributeName)) return null;
+        if (!this.attributes.has(attributeName)) return null;
 
-      return this.attributes.get(attributeName)!![0] || null;
+        return this.attributes.get(attributeName)!![0] || null;
     }
 }

@@ -18,10 +18,13 @@ module.exports = {
   ],
   rules: {
     'no-console': 'off', // @@ turn on when done printf debugging
+    'no-continue': 'off',
+    'prefer-template': 'off',
+    'class-methods-use-this': 'off',
     indent: ['error', 2, { SwitchCase: 1 }],
     'no-unused-vars': 'off',
     'no-shadow': 'off',
-    'max-classes-per-file': ['error', 10],
+    'max-classes-per-file': ['error', 100], // @@
     'no-underscore-dangle': ['error', { allowAfterThis: true }],
     'no-use-before-define': 'off',
     'no-array-constructor': 'off',
@@ -30,7 +33,7 @@ module.exports = {
     'no-empty-function': 'off',
     'sort-imports': ['error', { ignoreDeclarationSort: true }],
     'max-len': ['error', {
-      code: 150, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreTrailingComments: true, ignoreComments: true, ignoreStrings: true,
+      code: 250 /* @@ */, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreTrailingComments: true, ignoreComments: true, ignoreStrings: true,
     }],
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'import/no-default-export': ['error'],
