@@ -1,6 +1,6 @@
 import { URL } from 'url';
-import { ShapeTreeResource } from './ShapeTreeResource';
 import { ShapeTreeContext } from '@core/models/ShapeTreeContext';
+import { ShapeTreeResource } from './ShapeTreeResource';
 
 export interface ResourceAccessor {
   getResource(context: ShapeTreeContext, resourceURI: URL): ShapeTreeResource /* throws ShapeTreeException */;

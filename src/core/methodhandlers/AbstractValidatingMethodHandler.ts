@@ -186,8 +186,8 @@ export abstract class AbstractValidatingMethodHandler {
     if (shapeTreeRequest.getLinkHeaders() != null && shapeTreeRequest.getLinkHeaders().get(LinkRelations.TYPE) != null) {
       const links: string[] | undefined = shapeTreeRequest.getLinkHeaders().get(LinkRelations.TYPE);
       return (links !== undefined && (
-        links.indexOf(LdpVocabulary.CONTAINER) !== -1 ||
-        links.indexOf(LdpVocabulary.BASIC_CONTAINER) === -1
+        links.indexOf('' + LdpVocabulary.CONTAINER) !== -1 ||
+        links.indexOf('' + LdpVocabulary.BASIC_CONTAINER) === -1
       ));
     }
     return false;
@@ -414,7 +414,7 @@ export abstract class AbstractValidatingMethodHandler {
   protected plantShapeTree(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, body     : string, contentType  : string, rootShapeTree: ShapeTree       , rootContainer  : string,       shapeTree: ShapeTree, requestedName: string): ShapeTreePlantResult /* throws IOException, URISyntaxException * /
   */
 
-  protected plantShapeTreeStore(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, bodyGraph: Store, rootShapeTree: ShapeTree, rootContainer: string, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
+  protected plantShapeTreeStore(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, bodyGraph: Store, rootShapeTree: ShapeTree, rootContainer: string | null, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
     return this.plantShapeTree(shapeTreeContext, parentContainer, GraphHelper.writeGraphToTurtleString(bodyGraph) || '', AbstractValidatingMethodHandler.TEXT_TURTLE, rootShapeTree, rootContainer, shapeTree, requestedName);
   }
 
@@ -427,7 +427,7 @@ export abstract class AbstractValidatingMethodHandler {
     return this.plantShapeTree(shapeTreeContext, parentContainer, body, contentType, rootShapeTree, locator.getShapeTreeRoot(), targetShapeTree, requestedName);
   }
 
-  protected async plantShapeTree(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, body: string, contentType: string, rootShapeTree: ShapeTree, rootContainer: string, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
+  protected async plantShapeTree(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, body: string, contentType: string, rootShapeTree: ShapeTree, rootContainer: string | null, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
     log.debug("plantShapeTree: parent [{}], root tree [{}], tree [{}], slug [{}], ", parentContainer.getUri(), rootShapeTree.getId(), shapeTree.getId(), requestedName);
 
     const plantedContainerResource: ShapeTreeResource = await this.createOrReuseContainer(shapeTreeContext, parentContainer.getUri(), requestedName, body, contentType);
@@ -435,7 +435,7 @@ export abstract class AbstractValidatingMethodHandler {
 
     // In a POST scenario where the container has not yet been created, it cannot be passed into plantShapeTree
     // hierarchy of recursive method calls.  So, if it is null, set it to the URI of the planted container.
-    if (rootContainer == null) {
+    if (rootContainer === null) {
       rootContainer = plantedContainerResource.getUri().toString();
     }
 

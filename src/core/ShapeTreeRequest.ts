@@ -1,5 +1,5 @@
-import { URL } from "url";
-import { ShapeTreeResourceType } from "./enums";
+import { URL } from 'url';
+import { ShapeTreeResourceType } from './enums';
 
 export interface ShapeTreeRequest<T> {
   getNativeRequest(): T;

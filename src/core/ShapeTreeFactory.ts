@@ -1,7 +1,9 @@
-import { expectOneObject, expectType, expectTypes } from '@todo/graphHelper';
 import log from 'loglevel';
-import { BlankNode, DataFactory, Literal, NamedNode, Quad, Store, Variable } from 'n3';
 import { URL } from 'url';
+import { expectOneObject, expectType, expectTypes } from '@todo/graphHelper';
+import {
+  BlankNode, DataFactory, Literal, NamedNode, Quad, Store,
+} from 'n3';
 import { DocumentContentsLoader } from './contentloaders/DocumentContentsLoader';
 import { HttpDocumentContentsLoader } from './contentloaders/HttpDocumentContentsLoader';
 import { ShapeTreeException } from './exceptions';
@@ -21,7 +23,7 @@ export class ShapeTreeFactory {
   private static RDFS_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label';
   private static contentsLoader: DocumentContentsLoader = new HttpDocumentContentsLoader(null, null);
 
-  private static localShapeTreeCache: Map<URL, ShapeTree> = new Map(); //@@ <string, ShapeTree> ?
+  private static localShapeTreeCache: Map<URL, ShapeTree> = new Map(); // @@ <string, ShapeTree> ?
 
   public static setContentsLoader(contentsLoader: DocumentContentsLoader): void {
     ShapeTreeFactory.contentsLoader = contentsLoader;
@@ -45,13 +47,16 @@ export class ShapeTreeFactory {
   private static async dereferenceAndParseShapeTreeResource(shapeTreeURI: URL): Promise<void> /* throws URISyntaxException, ShapeTreeException */ {
     try {
       const contents: DocumentContents = await this.contentsLoader.loadDocumentContents(shapeTreeURI);
-      if (contents === null)
-        throw null;
-      const model: Store = GraphHelper.readStringIntoGraph(shapeTreeURI, contents.getBody()!!, contents.getContentType());
+      let body: string | null;
+      // eslint-disable-next-line no-cond-assign
+      if (contents === null || (body = contents.getBody()) === null) {
+        throw new ShapeTreeException(422, 'Unable to load ShapeTree ' + shapeTreeURI);
+      }
+      const model: Store = GraphHelper.readStringIntoGraph(shapeTreeURI, body /* @@ */, contents.getContentType());
       const resource: NamedNode = nn(shapeTreeURI.toString());
       this.recursivelyParseShapeTree(model, resource);
     } catch (rnfe/*: RiotNotFoundException */) {
-      log.error('Unable to load graph at URI {}', shapeTreeURI);
+      log.error('Unable to load graph at URI {}', shapeTreeURI); // @@ I suspect this should throw.
     }
   }
 
@@ -84,7 +89,6 @@ export class ShapeTreeFactory {
     // Add the shapeTree to the cache before any of the recursive processing
     ShapeTreeFactory.localShapeTreeCache.set(shapeTreeURI, shapeTree);
 
-
     const referencesProperty: NamedNode = nn(ShapeTreeVocabulary.REFERENCES);
     const referenceStatements: Quad[] = model.getQuads(resource, referencesProperty, null, null);
     for (const referenceStatement of referenceStatements) {
@@ -110,9 +114,10 @@ export class ShapeTreeFactory {
     if (shapeTree.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_CONTAINER) {
       const uris: NamedNode[] = expectTypes<NamedNode>(model, resource, nn(ShapeTreeVocabulary.CONTAINS),
         (term) => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`); });
-      if (uris.length === 0)
+      if (uris.length === 0) {
         throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`);
-      shapeTree.setContains(uris.map(uri => new URL(uri.value)));
+      }
+      shapeTree.setContains(uris.map((uri) => new URL(uri.value)));
       for (const uri of uris) {
         if (!this.localShapeTreeCache.has(new URL(uri.value)) && !this.isShapeTreeAllowIRI(uri.value)) {
           this.recursivelyParseShapeTree(model, nn(uri.value));
@@ -132,8 +137,9 @@ export class ShapeTreeFactory {
   private static getStringValue(model: Store, resource: NamedNode, predicate: string): string | null {
     const property: NamedNode = nn(predicate);
     const matches: Quad[] = model.getQuads(resource, property, null, null);
-    if (matches.length === 0)
+    if (matches.length === 0) {
       return null;
+    }
     // @@ throw if there are too many? shapetrees-java returns a random one.
     const o = matches[0].object;
     if (o instanceof BlankNode) {

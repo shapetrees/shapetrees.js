@@ -5,6 +5,8 @@ Javascript (typescript) implementation of ShapeTrees
 
 * see src/todo/*
 
+* loglevel probably doesn't support `"Failed to {} from {}", p1, p2` invocation
+
 * move typing to end of function decl:
 ```
 default \(public\) +\([^ ]+\) +\([a-zA-Z0-9_]+\)(\([^)]*\)) → \1 \3(\4): \2

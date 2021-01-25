@@ -1,6 +1,6 @@
-import { ValidationContext } from "./models/ValidationContext";
-import { ShapeTreeResponse } from "./ShapeTreeResponse";
 import { ShapeTreeException } from '@core/exceptions';
+import { ShapeTreeResponse } from './ShapeTreeResponse';
+import { ValidationContext } from './models/ValidationContext';
 
 // @Getter @Setter
 export class ShapeTreeValidationResponse extends ShapeTreeResponse {
@@ -33,5 +33,4 @@ export class ShapeTreeValidationResponse extends ShapeTreeResponse {
     response.setValidationContext(validationContext);
     return response;
   }
-
 }

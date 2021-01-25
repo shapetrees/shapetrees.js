@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /*
 emulation of OkHttp interface.
 */
@@ -86,6 +87,7 @@ class Request {
   ) {
     this.url = typeof url === 'string' ? new URL(url) : url;
   }
+
   header(key: string): string | undefined {
     const ret = this.headers.get(key);
     return ret ? ret.join(',') : undefined;
@@ -141,13 +143,12 @@ class HttpCall {
 
   // eslint-disable-next-line class-methods-use-this
   async execute(): Promise<Response> {
-    if (this.client._interceptors.length === 0)
+    if (this.client._interceptors.length === 0) {
       return myProceed(this.request);
-    else
-      return this.client._interceptors[0].intercept(new ChainImpl(this.request, this.client._interceptors[0], myProceed));
+    }
+    return this.client._interceptors[0].intercept(new ChainImpl(this.request, this.client._interceptors[0], myProceed));
 
     async function myProceed(request: Request): Promise<Response> {
-
       const reqHeaders: { [key: string]: string; } = {};
       for (const [key, vals] of request.headers) {
         reqHeaders[key] = vals.join(','); // @@ should split on ',' for all comma list headers?
@@ -158,14 +159,14 @@ class HttpCall {
         data: request.body,
       };
       try {
-
         // @@ should change to the more typed version below
         const resp = await fetch(request.url, parms);
         const respHeaders: Headers = new Map();
-        for (const [header, value] of resp.headers)
+        for (const [header, value] of resp.headers) {
           respHeaders.set(header, [value]);
+        }
         const text: string = await resp.text();
-        return new Response(resp.status, new ResponseBody(text, resp.headers.get('content-type')[0]), respHeaders, request)
+        return new Response(resp.status, new ResponseBody(text, (resp.headers.get('content-type') || [null])[0]), respHeaders, request);
       } catch (e) {
         console.warn(`${request.method}ing ${request.url}`, e);
         throw new IOException(`${request.method}ing ${request.url}`, e);
@@ -193,7 +194,6 @@ class ResponseBuilder {
 }
 
 class Response {
-
   constructor(code: number, body: ResponseBody, headers: Map<string, string[]>, request: Request | null = null) {
     this._code = code;
     this._message = Response.codeToMessage.get(code) || 'bummer';
@@ -208,7 +208,7 @@ class Response {
   private static codeToMessage: Map<number, string> = new Map([
     [200, 'OK'],
     [401, 'Not Authorized'],
-    [403, 'Forbidden']
+    [403, 'Forbidden'],
   ]);
 
   code(): number { return this._code; }
@@ -237,9 +237,11 @@ class ResponseBody {
   // eslint-disable-next-line class-methods-use-this
   constructor(
     public text: string = '',
-    public mediaType: string = 'text/plain'
+    public mediaType: string | null = null,
   ) { }
+
   string(): string { return ''; }
+
   static create(text: string, mediaType: string): ResponseBody { return new ResponseBody(text, mediaType); }
 }
 

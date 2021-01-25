@@ -35,7 +35,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
 
       this.ensureRequestResourceExists(existingResource, "Parent Container not found");
 
-      let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, UUID.randomUUID().toString());
+      let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, uuid().toString());
       const incomingRequestShapeTreeUris: string[] = this.getIncomingLinkHeaderByRelationValue(shapeTreeRequest, LinkRelations.SHAPETREE);
       const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), requestedName, shapeTreeRequest.getResourceType());
       const incomingRequestBodyGraph: Store = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI) ||
@@ -112,6 +112,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       if (e instanceof Error)
         return new ShapeTreeValidationResponse(new ShapeTreeException(500, e.message));
     }
+    return new ShapeTreeValidationResponse(); // @@ tsc thought not all paths returned
   }
 
   private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store, baseURI: URL, shapeTreesToPlant: ShapeTree[]): Promise<void> /* throws IOException, URISyntaxException */ {
@@ -148,7 +149,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
           const shapeTree: ShapeTree | null = await ShapeTreeFactory.getShapeTree(new URL(locator.getShapeTree()));
           if (shapeTree !== null) {
             log.debug("Found ShapeTree [{}] already planted in existing container, adding to list to validate", shapeTree.getURI());
-            shapeTreesToPlant.add(shapeTree);
+            shapeTreesToPlant.push(shapeTree);
           } else {
             throw new ShapeTreeException(500, "Existing container is managed by a shape tree " + locator.getShapeTree() + " which cannot be found");
           }
