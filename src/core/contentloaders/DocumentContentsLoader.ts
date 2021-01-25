@@ -13,5 +13,5 @@ export interface DocumentContentsLoader {
    * @return DocumentContents representation which contains body and content type
    * @throws ShapeTreeException ShapeTreeException
    */
-  loadDocumentContents(resourceURI: URL): DocumentContents /* throws ShapeTreeException */;
+  loadDocumentContents(resourceURI: URL): Promise<DocumentContents> /* throws ShapeTreeException */;
 }

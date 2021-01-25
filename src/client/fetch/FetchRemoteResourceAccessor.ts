@@ -24,7 +24,7 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
   }
 
   // @Override
-  public createResource(context: ShapeTreeContext, resourceURI: URL, headers: Map<string, string[]>, body: string, contentType: string): ShapeTreeResource /* throws ShapeTreeException */ {
+  public async createResource(context: ShapeTreeContext, resourceURI: URL, headers: Map<string, string[]>, body: string, contentType: string): Promise<ShapeTreeResource> /* throws ShapeTreeException */ {
     log.debug("createResource: URI [{}], headers [{}]", resourceURI, this.writeHeaders(headers));
 
     try {
@@ -39,11 +39,11 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
         .post(RequestBody.create(body, MediaType.get(contentType)))
         .url(resourceURI);
 
-      if (context.getAuthorizationHeaderValue() != null) {
-        createResourcePostBuilder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue());
+      if (context.getAuthorizationHeaderValue() !== null) {
+        createResourcePostBuilder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue()!!);
       }
 
-      const response: Response = httpClient.newCall(createResourcePostBuilder.build()).execute();
+      const response: Response = await httpClient.newCall(createResourcePostBuilder.build()).execute();
       return FetchHelper.mapFetchResponseToShapeTreeResource(response, resourceURI, headers);
     } catch (ex/*: IOException */) {
       throw new ShapeTreeException(500, ex.getMessage());
@@ -51,7 +51,7 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
   }
 
   // @Override
-  public updateResource(context: ShapeTreeContext, updatedResource: ShapeTreeResource): ShapeTreeResource /* throws ShapeTreeException */ {
+  public async updateResource(context: ShapeTreeContext, updatedResource: ShapeTreeResource): Promise<ShapeTreeResource> /* throws ShapeTreeException */ {
     log.debug("updateResource: URI [{}]", updatedResource.getUri());
 
     try {
@@ -61,20 +61,20 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
       const updateResourcePutBuilder: RequestBuilder = new RequestBuilder();
 
       updateResourcePutBuilder.headers(FetchHelper.convertHeaders(updatedResource.getAttributes()))
-        .put(RequestBody.create(updatedResource.getBody(), MediaType.get(contentType)))
-        .url(updatedResource.getUri().toURL());
+        .put(RequestBody.create(updatedResource.getBody(), MediaType.get(contentType || 'text/turtle'))) // @@
+        .url(updatedResource.getUri());
 
-      if (context.getAuthorizationHeaderValue() != null) {
-        updateResourcePutBuilder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue());
+      if (context.getAuthorizationHeaderValue() !== null) {
+        updateResourcePutBuilder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue()!!);
       }
 
-      const response: Response = httpClient.newCall(updateResourcePutBuilder.build()).execute();
+      const response: Response = await httpClient.newCall(updateResourcePutBuilder.build()).execute();
       if (!response.isSuccessful()) {
         log.error("Error updating resource {}, Status {} Message {}", updatedResource, response.code(), response.message());
       }
 
       // Re-pull the resource after the update
-      return getResource(context, updatedResource.getUri());
+      return this.getResource(context, updatedResource.getUri());
     } catch (ex/*: IOException*/) {
       throw new ShapeTreeException(500, ex.message);
     }

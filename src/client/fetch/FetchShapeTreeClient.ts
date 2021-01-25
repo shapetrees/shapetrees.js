@@ -92,7 +92,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
     const builder: RequestBuilder /* Request.Builder */ = new Request.Builder()
-      .url(parentContainer.toString());
+      .url(parentContainer);
 
     for (const shapeTreeUri of shapeTreeURIs) {
       builder.addHeader(HttpHeaders.LINK, `<${shapeTreeUri.toString()}>; rel="${LinkRelations.SHAPETREE}"`);
@@ -146,7 +146,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     log.debug('Build Resource URL {}', resourceURI);
 
     const putBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
-      .url(resourceURI)
+      .url(parentContainer)
       .put(RequestBody.create(bodyString));
 
     // proposed resource is name is nulled since a Slug will not be used
@@ -167,7 +167,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
     const putBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
-      .url(resourceURI.toString())
+      .url(resourceURI)
       .put(RequestBody.create(bodyString));
 
     this.applyCommonHeaders(context, putBuilder, focusNode, shapeTreeHint, null, null, contentType);
@@ -187,7 +187,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     const contentType: string = 'application/sparql-update';
 
     const patchBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
-      .url(resourceURI.toString())
+      .url(resourceURI)
       .patch(RequestBody.create(bodyString));
 
     this.applyCommonHeaders(context, patchBuilder, focusNode, shapeTreeHint, null, null, contentType);
@@ -200,7 +200,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     const client: FetchHttpClient = ShapeTreeHttpClientHolder.getForConfig(this.getConfiguration(this._skipValidation));
 
     const deleteBuilder: RequestBuilder /* Request.Builder */ = new Request.Builder()
-      .url(resourceURI.toString())
+      .url(resourceURI)
       .delete();
 
     this.applyCommonHeaders(context, deleteBuilder, null, shapeTreeURI, null, null, null);
@@ -232,7 +232,7 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
     contentType: string | null,
   ): void {
     if (context.getAuthorizationHeaderValue() !== null) {
-      builder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue());
+      builder.addHeader(HttpHeaders.AUTHORIZATION, context.getAuthorizationHeaderValue()!!);
     }
 
     if (isContainer !== null) {

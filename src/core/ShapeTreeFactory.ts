@@ -1,8 +1,17 @@
+import { expectOneObject, expectType, expectTypes } from '@todo/graphHelper';
+import log from 'loglevel';
+import { BlankNode, DataFactory, Literal, NamedNode, Quad, Store, Variable } from 'n3';
 import { URL } from 'url';
 import { DocumentContentsLoader } from './contentloaders/DocumentContentsLoader';
 import { HttpDocumentContentsLoader } from './contentloaders/HttpDocumentContentsLoader';
+import { ShapeTreeException } from './exceptions';
+import { GraphHelper } from './helpers/GraphHelper';
 import { DocumentContents } from './models/DocumentContents';
+import { ReferencedShapeTree } from './models/ReferencedShapeTree';
 import { ShapeTree } from './models/ShapeTree';
+import { ShapeTreeVocabulary } from './vocabularies/ShapeTreeVocabulary';
+
+const nn = DataFactory.namedNode;
 
 // @Slf4j
 export class ShapeTreeFactory {
@@ -12,138 +21,144 @@ export class ShapeTreeFactory {
   private static RDFS_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label';
   private static contentsLoader: DocumentContentsLoader = new HttpDocumentContentsLoader(null, null);
 
-  private static localShapeTreeCache: Map<URL, ShapeTree> = new Map();
+  private static localShapeTreeCache: Map<URL, ShapeTree> = new Map(); //@@ <string, ShapeTree> ?
 
   public static setContentsLoader(contentsLoader: DocumentContentsLoader): void {
     ShapeTreeFactory.contentsLoader = contentsLoader;
   }
 
-  public static getShapeTree(shapeTreeURI: URL): ShapeTree /* throws URISyntaxException, ShapeTreeException */ {
-    if (this.isShapeTreeAllowIRI(shapeTreeURI)) {
+  public static async getShapeTree(shapeTreeURI: URL): Promise<ShapeTree | null> /* throws URISyntaxException, ShapeTreeException */ {
+    if (this.isShapeTreeAllowIRI(shapeTreeURI.href)) {
       return null;
     }
 
     if (this.localShapeTreeCache.has(shapeTreeURI)) {
-      log.debug("[{}] previously cached -- returning", shapeTreeURI.toString());
-      return this.localShapeTreeCache.get(shapeTreeURI);
+      log.debug('[{}] previously cached -- returning', shapeTreeURI.toString());
+      return this.localShapeTreeCache.get(shapeTreeURI) || null;
     }
 
     this.dereferenceAndParseShapeTreeResource(shapeTreeURI);
 
-    return this.localShapeTreeCache.get(shapeTreeURI);
+    return this.localShapeTreeCache.get(shapeTreeURI) || null;
   }
 
-  private static dereferenceAndParseShapeTreeResource(shapeTreeURI: URL): void /* throws URISyntaxException, ShapeTreeException */ {
+  private static async dereferenceAndParseShapeTreeResource(shapeTreeURI: URL): Promise<void> /* throws URISyntaxException, ShapeTreeException */ {
     try {
-      const contents: DocumentContents = this.contentsLoader.loadDocumentContents(shapeTreeURI);
-      const model: Model = GraphHelper.readStringIntoModel(shapeTreeURI, contents.getBody(), contents.getContentType());
-      const resource: Resource = model.getResource(shapeTreeURI.toString());
+      const contents: DocumentContents = await this.contentsLoader.loadDocumentContents(shapeTreeURI);
+      if (contents === null)
+        throw null;
+      const model: Store = GraphHelper.readStringIntoGraph(shapeTreeURI, contents.getBody()!!, contents.getContentType());
+      const resource: NamedNode = nn(shapeTreeURI.toString());
       this.recursivelyParseShapeTree(model, resource);
     } catch (rnfe/*: RiotNotFoundException */) {
-      log.error("Unable to load graph at URI {}", shapeTreeURI);
+      log.error('Unable to load graph at URI {}', shapeTreeURI);
     }
   }
 
-  private static recursivelyParseShapeTree(model: Model, resource: Resource): void /* throws URISyntaxException, ShapeTreeException */ {
-    const shapeTreeURIString: string = resource.getURI();
-    log.debug("Entering recursivelyParseShapeTree for [{}]", shapeTreeURIString);
+  private static recursivelyParseShapeTree(model: Store, resource: NamedNode): void /* throws URISyntaxException, ShapeTreeException */ {
+    const shapeTreeURIString: string = resource.value;
+    log.debug('Entering recursivelyParseShapeTree for [{}]', shapeTreeURIString);
     const shapeTreeURI: URL = new URL(shapeTreeURIString);
 
-    if (this.localShapeTreeCache.containsKey(shapeTreeURI)) {
-      log.debug("[{}] previously cached -- returning", shapeTreeURIString);
+    if (this.localShapeTreeCache.has(shapeTreeURI)) {
+      log.debug('[{}] previously cached -- returning', shapeTreeURIString);
       return;
     }
 
-    const shapeTree: ShapeTree = new ShapeTree(contentsLoader);
+    const shapeTree: ShapeTree = new ShapeTree(ShapeTreeFactory.contentsLoader);
     // Set the URI as the ID (string representation)
     shapeTree.setId(shapeTreeURIString);
     // Set the expected resource type
-    const expectsType: string = this.getStringValue(model, resource, ShapeTreeVocabulary.EXPECTS_TYPE);
-    if (expectsType == null) throw new ShapeTreeException(500, "Shape Tree :expectsType not found");
-    shapeTree.setExpectedResourceType(expectsType);
+    const expectsType = expectOneObject<NamedNode>(model, resource, nn(ShapeTreeVocabulary.EXPECTS_TYPE),
+      () => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} should have one st:expectsType`); });
+    shapeTree.setExpectedResourceType(expectsType.value);
     // Set Shape URI
     shapeTree.setValidatedByShapeUri(this.getStringValue(model, resource, ShapeTreeVocabulary.VALIDATED_BY));
     // Set Label
-    shapeTree.setLabel(getStringValue(model, resource, RDFS_LABEL));
+    shapeTree.setLabel(ShapeTreeFactory.getStringValue(model, resource, ShapeTreeFactory.RDFS_LABEL));
     // Set Supports
-    shapeTree.setSupports(getStringValue(model, resource, ShapeTreeVocabulary.SUPPORTS));
+    shapeTree.setSupports(ShapeTreeFactory.getStringValue(model, resource, ShapeTreeVocabulary.SUPPORTS));
     // Set Reference collection
-    shapeTree.setReferences(new ArrayList<>());
+    shapeTree.setReferences(new Array());
 
     // Add the shapeTree to the cache before any of the recursive processing
-    localShapeTreeCache.put(shapeTreeURI, shapeTree);
+    ShapeTreeFactory.localShapeTreeCache.set(shapeTreeURI, shapeTree);
 
-    const referencesProperty: Property = model.createProperty(ShapeTreeVocabulary.REFERENCES);
-    if (resource.hasProperty(referencesProperty)) {
-      const referenceStatements: Statement[] = resource.listProperties(referencesProperty).toList();
-      for (const referenceStatement of referenceStatements) {
 
-        const referenceResource: Resource = referenceStatement.getObject().asResource();
-        const referenceShapeTreeUri: URL = new URL(getStringValue(model, referenceResource, ShapeTreeVocabulary.HAS_SHAPE_TREE));
-        const shapePath: string = getStringValue(model, referenceResource, ShapeTreeVocabulary.TRAVERSE_VIA_SHAPE_PATH);
-        if (!localShapeTreeCache.containsKey(referenceShapeTreeUri)) {
-          // If the model contains the referenced ShapeTree, go ahead and parse and cache it
-          recursivelyParseShapeTree(model, model.getResource(referenceShapeTreeUri.toString()));
-        }
-
-        // Create the object that defines there relation between a ShapeTree and its children
-        const referencedShapeTree: ReferencedShapeTree = new ReferencedShapeTree(referenceShapeTreeUri, shapePath);
-        shapeTree.getReferences().add(referencedShapeTree);
+    const referencesProperty: NamedNode = nn(ShapeTreeVocabulary.REFERENCES);
+    const referenceStatements: Quad[] = model.getQuads(resource, referencesProperty, null, null);
+    for (const referenceStatement of referenceStatements) {
+      const referenceResource = expectType<NamedNode>(referenceStatement.object);
+      const referenceShapeTreeUri = expectOneObject<NamedNode>(model, referenceResource, nn(ShapeTreeVocabulary.HAS_SHAPE_TREE),
+        () => { throw new ShapeTreeException(500, `Shape Tree ${referenceResource.value} st:hasShapeTree not found`); });
+      const shapePath = expectOneObject<Literal>(model, referenceResource, nn(ShapeTreeVocabulary.TRAVERSE_VIA_SHAPE_PATH),
+        () => { throw new ShapeTreeException(500, `Shape Tree ${referenceResource.value} st:traverseViaShapePath not found`); });
+      if (!ShapeTreeFactory.localShapeTreeCache.has(new URL(referenceShapeTreeUri.value))) {
+        // If the model contains the referenced ShapeTree, go ahead and parse and cache it
+        ShapeTreeFactory.recursivelyParseShapeTree(model, referenceShapeTreeUri);
       }
+
+      // Create the object that defines there relation between a ShapeTree and its children
+      const referencedShapeTree: ReferencedShapeTree = new ReferencedShapeTree(new URL(referenceShapeTreeUri.value), shapePath.value);
+      shapeTree.getReferences().push(referencedShapeTree);
     }
 
     // Containers are expected to have contents
-    if (resource.hasProperty(model.createProperty(ShapeTreeVocabulary.CONTAINS)) && !shapeTree.getExpectedResourceType().equals(ShapeTreeVocabulary.SHAPETREE_CONTAINER)) {
-      throw new ShapeTreeException(400, "Contents predicate not expected outside of #ShapeTreeContainer Types");
+    if (model.getQuads(resource, ShapeTreeVocabulary.CONTAINS, null, null).length > 0 && shapeTree.getExpectedResourceType() !== ShapeTreeVocabulary.SHAPETREE_CONTAINER) {
+      throw new ShapeTreeException(400, 'Contents predicate not expected outside of #ShapeTreeContainer Types'); // are schema errors 500s?
     }
-    if (shapeTree.getExpectedResourceType().equals(ShapeTreeVocabulary.SHAPETREE_CONTAINER)) {
-      const uris: URL[] = getURLListValue(model, resource, ShapeTreeVocabulary.CONTAINS);
-      shapeTree.setContains(uris);
+    if (shapeTree.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_CONTAINER) {
+      const uris: NamedNode[] = expectTypes<NamedNode>(model, resource, nn(ShapeTreeVocabulary.CONTAINS),
+        (term) => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`); });
+      if (uris.length === 0)
+        throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`);
+      shapeTree.setContains(uris.map(uri => new URL(uri.value)));
       for (const uri of uris) {
-        if (!this.localShapeTreeCache.containsKey(uri) && !this.isShapeTreeAllowIRI(uri)) {
-          this.recursivelyParseShapeTree(model, model.getResource(uri.toString()));
+        if (!this.localShapeTreeCache.has(new URL(uri.value)) && !this.isShapeTreeAllowIRI(uri.value)) {
+          this.recursivelyParseShapeTree(model, nn(uri.value));
         }
       }
     }
   }
 
-  private static isShapeTreeAllowIRI(uri: URL): boolean /* throws URISyntaxException */ {
-    return uri.equals(new URL(ShapeTreeVocabulary.ALLOW_ALL)) ||
-      uri.equals(new URL(ShapeTreeVocabulary.ALLOW_NONE)) ||
-      uri.equals(new URL(ShapeTreeVocabulary.ALLOW_RESOURCES)) ||
-      uri.equals(new URL(ShapeTreeVocabulary.ALLOW_CONTAINERS)) ||
-      uri.equals(new URL(ShapeTreeVocabulary.ALLOW_NON_RDF_SOURCES));
+  private static isShapeTreeAllowIRI(uri: string): boolean /* throws URISyntaxException */ {
+    return uri === ShapeTreeVocabulary.ALLOW_ALL
+      || uri === ShapeTreeVocabulary.ALLOW_NONE
+      || uri === ShapeTreeVocabulary.ALLOW_RESOURCES
+      || uri === ShapeTreeVocabulary.ALLOW_CONTAINERS
+      || uri === ShapeTreeVocabulary.ALLOW_NON_RDF_SOURCES;
   }
 
-  private static getStringValue(model: Model, resource: Resource, predicate: string): string {
-    const property: Property = model.createProperty(predicate);
-    if (resource.hasProperty(property)) {
-      const statement: Statement = resource.getProperty(property);
-      if (statement.getObject().isLiteral()) {
-        return statement.getObject().asLiteral().getString();
-      } else if (statement.getObject().isURIResource()) {
-        return statement.getObject().asResource().getURI();
-      } else {
-        log.error("In getStringValue for predicate [{}] unable to value of Node", predicate);
-      }
-
+  private static getStringValue(model: Store, resource: NamedNode, predicate: string): string | null {
+    const property: NamedNode = nn(predicate);
+    const matches: Quad[] = model.getQuads(resource, property, null, null);
+    if (matches.length === 0)
+      return null;
+    // @@ throw if there are too many? shapetrees-java returns a random one.
+    const o = matches[0].object;
+    if (o instanceof BlankNode) {
+      // @@ should this throw?
+      log.error('In getStringValue for predicate [{}] unable to value of Node', predicate);
+      return null;
     }
-    return null;
+    return o.value;
   }
 
-  private static getURLListValue(model: Model, resource: Resource, predicate: string): URL[] /* throws URISyntaxException */ {
+  /* @@ delme? -- supplanted by expectsTypes
+  private static getURLListValue(model: Store, resource: NamedNode, predicate: string): URL[] /* throws URISyntaxException * / {
     const uris: URL[] = new Array();
-    const property: Property = model.createProperty(predicate);
+    const property: NamedNode = nn(predicate);
     if (resource.hasProperty(property)) {
       const propertyStatements: Statement[] = resource.listProperties(property).toList();
       for (const propertyStatement of propertyStatements) {
         const propertyNode: Node = propertyStatement.getObject().asNode();
         if (propertyNode instanceof Node_URL) {
           const contentURI: URL = new URL(propertyNode.getURI());
-          uris.add(contentURI);
+          uris.push(contentURI);
         }
       }
     }
     return uris;
   }
+  */
 }

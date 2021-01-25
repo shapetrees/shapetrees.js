@@ -4,7 +4,7 @@ import { URL } from "url";
 export class DocumentContents {
   constructor(
     private uri: URL,
-    private body: string,
+    private body: string | null,
     private contentType: string
   ) { }
 
@@ -13,6 +13,6 @@ export class DocumentContents {
   setContentType(contentType: string): void { this.contentType = contentType; }
 
   getUri(): URL { return this.uri; }
-  getBody(): string { return this.body; }
+  getBody(): string | null { return this.body; }
   getContentType(): string { return this.contentType; }
 }

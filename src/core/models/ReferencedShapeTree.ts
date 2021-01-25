@@ -2,8 +2,10 @@ import { URL } from "url";
 
 // @Getter @AllArgsConstructor
 export class ReferencedShapeTree {
-  referencedShapeTreeURI: URL;
-  traverseViaShapePath: string;
+  constructor(
+    private referencedShapeTreeURI: URL,
+    private traverseViaShapePath: string
+  ) { }
 
   getReferencedShapeTreeURI(): URL { return this.referencedShapeTreeURI; };
   setReferencedShapeTreeURI(referencedShapeTreeURI: URL): void { this.referencedShapeTreeURI = referencedShapeTreeURI };

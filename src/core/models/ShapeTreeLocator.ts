@@ -11,6 +11,13 @@ export class ShapeTreeLocator {
     private shapeTreeRoot: string
   ) { }
 
+  getRootShapeTree(): string { return this.rootShapeTree; }
+  // setRootShapeTree(rootShapeTree: string): void { this.rootShapeTree = rootShapeTree; }
+  getShapeTree(): string { return this.shapeTree; }
+  // setShapeTree(shapeTree: string): void { this.shapeTree = shapeTree; }
+  getShapeTreeRoot(): string { return this.shapeTreeRoot; }
+  // setShapeTreeRoot(shapeTreeRoot: string): void { this.shapeTreeRoot = shapeTreeRoot; }
+
   public static getShapeTreeLocatorsFromGraph(shapeTreeMetadataGraph: Store): ShapeTreeLocator[] {
     const locators: ShapeTreeLocator[] = new Array();
 

@@ -57,7 +57,7 @@ export class GraphHelper {
      * @throws ShapeTreeException ShapeTreeException
      */
   /* throws ShapeTreeException */
-  public static readStringIntoModel(baseURI: URL, rawContent: string, contentType: string): Store {
+  public static readStringIntoGraph(baseURI: URL, rawContent: string, contentType: string): Store {
     try {
       const ret = new Store();
       if (contentType === 'text/turtle') {
@@ -73,18 +73,5 @@ export class GraphHelper {
     } catch (ex) {
       throw new ShapeTreeException(422, `Error processing input - ${ex.getMessage()}`);
     }
-  }
-
-  /**
-     * Deserializes a string into a Graph
-     * @param baseURI Base URI to use for statements
-     * @param rawContent string of RDF
-     * @param contentType Content type of content
-     * @return Deserialized graph
-     * @throws ShapeTreeException ShapeTreeException
-     */
-  /* throws ShapeTreeException */
-  public static readStringIntoGraph(baseURI: URL, rawContent: string, contentType: string): Store {
-    return this.readStringIntoModel(baseURI, rawContent, contentType);
   }
 }

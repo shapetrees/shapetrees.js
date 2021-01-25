@@ -37,9 +37,16 @@ class ProgramFlowException extends RuntimeException { // @@ probably reflects my
   }
 }
 
+class TypeException<T> extends RuntimeException {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export {
   RuntimeException,
   IllegalStateException,
   IOException,
+  ProgramFlowException,
   NullPointerException,
 };

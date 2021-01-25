@@ -6,9 +6,11 @@ import fetch from 'node-fetch';
 import { URL } from 'url';
 import { IOException, RuntimeException } from './exceptions';
 
-enum Method {
+enum HttpRequestMethod {
   HEAD = 'HEAD', GET = 'GET', PUT = 'PUT', POST = 'POST', DELETE = 'DELETE'
 }
+
+type Headers = Map<string, string[]>;
 
 class RequestBody {
   text: string | null;
@@ -30,7 +32,7 @@ class RequestBuilder {
 
   _headers: Map<string, string[]> = new Map(); // EGP: need a multimap?
 
-  method: Method = Method.GET;
+  method: HttpRequestMethod = HttpRequestMethod.GET;
 
   body: string | null = null;
 
@@ -47,25 +49,25 @@ class RequestBuilder {
   }
 
   put(body: RequestBody): RequestBuilder {
-    this.method = Method.PUT;
+    this.method = HttpRequestMethod.PUT;
     this.body = body.text;
     return this;
   }
 
   post(body: RequestBody): RequestBuilder {
-    this.method = Method.POST;
+    this.method = HttpRequestMethod.POST;
     this.body = body.text;
     return this;
   }
 
   patch(body: RequestBody): RequestBuilder {
-    this.method = Method.POST; // ericP: is solid inventing methods?
+    this.method = HttpRequestMethod.POST; // ericP: is solid inventing methods?
     this.body = body.text;
     return this;
   }
 
   delete(): RequestBuilder {
-    this.method = Method.DELETE; // ericP: is solid inventing methods?
+    this.method = HttpRequestMethod.DELETE; // ericP: is solid inventing methods?
     this.body = null;
     return this;
   }
@@ -77,7 +79,7 @@ class RequestBuilder {
 class Request {
   public url: URL
   constructor(
-    public method: Method,
+    public method: HttpRequestMethod,
     url: URL | string,
     public headers: Map<string, string[]>,
     public body: string | null,
@@ -91,7 +93,6 @@ class Request {
 
   static Builder = RequestBuilder;
 }
-Request.Builder = RequestBuilder;
 
 interface Chain {
   // public abstract fun call(): okhttp3.Call
@@ -107,7 +108,7 @@ interface Chain {
 }
 
 interface Interceptor {
-  intercept(chain: Chain): Response
+  intercept(chain: Chain): Promise<Response>
 }
 
 class FetchClientBuilder {
@@ -134,7 +135,6 @@ class FetchHttpClient {
 
   newCall(request: Request): HttpCall { return new HttpCall(this, request); }
 }
-FetchHttpClient.Builder = FetchClientBuilder;
 
 class HttpCall {
   constructor(public client: FetchHttpClient, public request: Request) { }
@@ -146,24 +146,26 @@ class HttpCall {
     else
       return this.client._interceptors[0].intercept(new ChainImpl(this.request, this.client._interceptors[0], myProceed));
 
-    function myProceed(request: Request): Promise<Response> {
+    async function myProceed(request: Request): Promise<Response> {
 
-      const headers: { [key: string]: string; } = {};
+      const reqHeaders: { [key: string]: string; } = {};
       for (const [key, vals] of request.headers) {
-        headers[key] = vals.join(','); // @@ should split on ',' for all comma list headers?
+        reqHeaders[key] = vals.join(','); // @@ should split on ',' for all comma list headers?
       }
       const parms = {
         method: request.method,
-        headers,
+        headers: reqHeaders,
         data: request.body,
       };
       try {
+
         // @@ should change to the more typed version below
-        return fetch(request.url, parms).then(
-          resp => new Response(resp, request)
-        );
-        // const resp = await fetch(request.url, parms);
-        // return new Response(resp, request);
+        const resp = await fetch(request.url, parms);
+        const respHeaders: Headers = new Map();
+        for (const [header, value] of resp.headers)
+          respHeaders.set(header, [value]);
+        const text: string = await resp.text();
+        return new Response(resp.status, new ResponseBody(text, resp.headers.get('content-type')[0]), respHeaders, request)
       } catch (e) {
         console.warn(`${request.method}ing ${request.url}`, e);
         throw new IOException(`${request.method}ing ${request.url}`, e);
@@ -178,17 +180,39 @@ class ChainImpl implements Chain {
   proceed(request: Request): Promise<Response> { return this._proceed(request); }
 }
 
-class Response {
-  _code: number;
+class ResponseBuilder {
+  _code: number = 500;
+  _body: ResponseBody = new ResponseBody('ResponseBuilder not initialized', 'text/plain');
+  _headers: Map<string, string[]> = new Map();
+  _request: any;
+  code(c: number): ResponseBuilder { this._code = c; return this; }
+  body(b: ResponseBody): ResponseBuilder { this._body = b; return this; }
+  headers(h: Headers): ResponseBuilder { this._headers = h; return this; }
+  request(r: Request): ResponseBuilder { this._request = r; return this; }
+  build(): Response { return new Response(this._code, this._body, this._headers, this._request); }
+}
 
-  constructor(public resp: any, public req: Request) {
-    this._code = resp.status;
-    for (const [h, v] of resp.headers.entries()) {
-      this._headers.set(h, [v]);
+class Response {
+
+  constructor(code: number, body: ResponseBody, headers: Map<string, string[]>, request: Request | null = null) {
+    this._code = code;
+    this._message = Response.codeToMessage.get(code) || 'bummer';
+    this._body = body;
+    for (const [h, v] of headers.entries()) {
+      this._headers.set(h, v);
     }
   }
 
+  _code: number = 500;
+  _message: string = 'bummer';
+  private static codeToMessage: Map<number, string> = new Map([
+    [200, 'OK'],
+    [401, 'Not Authorized'],
+    [403, 'Forbidden']
+  ]);
+
   code(): number { return this._code; }
+  message(): string { return this._message; }
 
   isSuccessful(): boolean { return this._code.toString().startsWith('2'); }
 
@@ -203,16 +227,26 @@ class Response {
       : list[0];
   }
 
+  _body: ResponseBody = new ResponseBody('Response not initialized', 'text/plain');
+
   // eslint-disable-next-line class-methods-use-this
   body(): ResponseBody | null { return new ResponseBody(); }
 }
 
 class ResponseBody {
   // eslint-disable-next-line class-methods-use-this
+  constructor(
+    public text: string = '',
+    public mediaType: string = 'text/plain'
+  ) { }
   string(): string { return ''; }
+  static create(text: string, mediaType: string): ResponseBody { return new ResponseBody(text, mediaType); }
 }
 
 class FetchClient {
+  newCall(request: Request): HttpCall {
+    return new HttpCall(new FetchHttpClient(), request);
+  }
 }
 
 enum FollowRedirects {
@@ -237,8 +271,11 @@ class MediaType {
 
 export {
   Request,
+  Headers,
   RequestBody,
+  HttpRequestMethod,
   RequestBuilder, // ericP: should be in a Request.Builder namespace to really be parallel
+  ResponseBuilder,
   Response,
   ResponseBody,
   FetchHttpClient,

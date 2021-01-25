@@ -2,12 +2,19 @@
  * Interceptor used for client-side validation
  */
 
-import { Chain, Interceptor, Request, Response } from '@todo/FetchHttpClient';
+import log from 'loglevel';
+import { Chain, Interceptor, MediaType, Headers, Request, ResponseBuilder, Response, ResponseBody } from '@todo/FetchHttpClient';
 import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
 import { FetchShapeTreeRequest } from './FetchShapeTreeRequest';
 import { ResourceAccessor } from '@core/ResourceAccessor';
 import { FetchRemoteResourceAccessor } from './FetchRemoteResourceAccessor';
 import { ValidatingMethodHandler } from '@core/methodhandlers/ValidatingMethodHandler';
+import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
+import { ShapeTreeException } from '@core/exceptions';
+import { ProgramFlowException, RuntimeException } from '@todo/exceptions';
+import { ShapeTreeResponse } from '@core/ShapeTreeResponse';
+import { FetchHelper } from './FetchHelper';
+import { ValidatingPostMethodHandler } from '@core/methodhandlers/ValidatingPostMethodHandler';
 
 // @Slf4j
 export class ValidatingShapeTreeInterceptor implements Interceptor {
@@ -33,7 +40,7 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
      */
   // @NotNull
   // @Override
-  public intercept(/* @NotNull */ chain: Chain): Response /* throws IOException */ {
+  public async intercept(/* @NotNull */ chain: Chain): Promise<Response> /* throws IOException */ {
     const shapeTreeRequest: ShapeTreeRequest<Request> = new FetchShapeTreeRequest(chain.request());
     const resourceAccessor: ResourceAccessor = new FetchRemoteResourceAccessor();
 
@@ -41,22 +48,22 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
     const handler: ValidatingMethodHandler | null = this.getHandler(shapeTreeRequest.getMethod(), resourceAccessor);
     if (handler !== null) {
       try {
-        const shapeTreeResponse: ShapeTreeValidationResponse = handler.validateRequest(shapeTreeRequest);
+        const shapeTreeResponse: ShapeTreeValidationResponse = await handler.validateRequest(shapeTreeRequest);
         if (shapeTreeResponse.isValidRequest() && !shapeTreeResponse.isRequestFulfilled()) {
-          return chain.proceed(chain.request());
+          return await chain.proceed(chain.request());
         } else {
-          return createResponse(shapeTreeRequest, shapeTreeResponse);
+          return this.createResponse(shapeTreeRequest, shapeTreeResponse);
         }
       } catch (ex/*: ShapeTreeException */) {
         if (ex instanceof ShapeTreeException) {
           log.error("Error processing shape tree request: ", ex);
-          return createErrorResponse(ex, shapeTreeRequest);
+          return this.createErrorResponse(ex, shapeTreeRequest);
         }
-        if (ex instanceof Exception) {
+        if (ex instanceof RuntimeException) {
           log.error("Error processing shape tree request: ", ex);
-          return createErrorResponse(new ShapeTreeException(500, ex.getMessage()), shapeTreeRequest);
+          return this.createErrorResponse(new ShapeTreeException(500, ex.message), shapeTreeRequest);
         }
-        throw ProgramFlowException();
+        throw new ProgramFlowException();
       }
     } else {
       log.warn("No handler for method [{}] - passing through request", shapeTreeRequest.getMethod());
@@ -64,16 +71,16 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
     }
   }
 
-  private getHandler(requestMethod: string, resourceAccessor: ResourceAccessor): ValidatingMethodHandler {
+  private getHandler(requestMethod: string, resourceAccessor: ResourceAccessor): ValidatingMethodHandler | null {
     switch (requestMethod) {
-      case POST:
+      case ValidatingShapeTreeInterceptor.POST:
         return new ValidatingPostMethodHandler(resourceAccessor);
-      case PUT:
-        return new ValidatingPutMethodHandler(resourceAccessor);
-      case PATCH:
-        return new ValidatingPatchMethodHandler(resourceAccessor);
-      case DELETE:
-        return new ValidatingDeleteMethodHandler(resourceAccessor);
+      // !! TODO case ValidatingShapeTreeInterceptor.PUT:
+      //   return new ValidatingPutMethodHandler(resourceAccessor);
+      // case ValidatingShapeTreeInterceptor.PATCH:
+      //   return new ValidatingPatchMethodHandler(resourceAccessor);
+      // case ValidatingShapeTreeInterceptor.DELETE:
+      //   return new ValidatingDeleteMethodHandler(resourceAccessor);
       default:
         return null;
     }
@@ -85,8 +92,8 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
       .code(exception.getStatusCode())
       .body(ResponseBody.create(exception.getMessage(), MediaType.get("text/plain")))
       .request(request.getNativeRequest())
-      .protocol(Protocol.HTTP_2)
-      .message(exception.getMessage())
+      // @@ .protocol(Protocol.HTTP_2)
+      // @@ .message(exception.getMessage())
       .build();
   }
 
@@ -95,14 +102,14 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
     builder.code(response.getStatusCode());
     const headers: Headers = FetchHelper.convertHeaders(response.getResponseHeaders());
     builder.headers(headers);
-    let contentType: string = headers.get("Content-Type");
-    if (contentType == null) {
+    let contentType: string | undefined = (headers.get("Content-Type") || [undefined])[0];
+    if (contentType === undefined) {
       contentType = "text/turtle";
     }
 
-    builder.body(ResponseBody.create(response.getBody(), MediaType.get(contentType)))
-      .protocol(Protocol.HTTP_2)
-      .message("Success")
+    builder.body(ResponseBody.create(response.getBody() || '', MediaType.get(contentType)))
+      // @@ .protocol(Protocol.HTTP_2)
+      .code(200) // .message("Success")
       .request(request.getNativeRequest());
 
     return builder.build();

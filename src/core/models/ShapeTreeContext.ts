@@ -1,6 +1,7 @@
 // @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 export class ShapeTreeContext {
-    private authorizationHeaderValue: string;
+    private authorizationHeaderValue: string | null;
 
-    getAuthorizationHeaderValue(): string { return this.authorizationHeaderValue; }
+    getAuthorizationHeaderValue(): string | null { return this.authorizationHeaderValue; }
+    setAuthorizationHeaderValue(authorizationHeaderValue: string | null): void { this.authorizationHeaderValue = authorizationHeaderValue; }
 }

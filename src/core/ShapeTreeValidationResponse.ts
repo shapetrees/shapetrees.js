@@ -12,8 +12,8 @@ export class ShapeTreeValidationResponse extends ShapeTreeResponse {
   setValidRequest(validRequest: boolean): void { this.validRequest = validRequest; }
   setValidationContext(validationContext: ValidationContext | null): void { this.validationContext = validationContext; }
 
-  getRequestFulfilled(): boolean { return this.requestFulfilled; }
-  getValidRequest(): boolean { return this.validRequest; }
+  isRequestFulfilled(): boolean { return this.requestFulfilled; }
+  isValidRequest(): boolean { return this.validRequest; }
   getValidationContext(): ValidationContext | null { return this.validationContext; }
 
   public constructor(ste?: ShapeTreeException) {

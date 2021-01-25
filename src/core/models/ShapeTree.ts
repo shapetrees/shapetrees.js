@@ -13,15 +13,17 @@ import { ShapeTreeFactory } from '@core/ShapeTreeFactory';
 import { ReferencedShapeTree } from './ReferencedShapeTree';
 import { ValidationResult } from './ValidationResult';
 import { DocumentContents } from './DocumentContents';
+import { ShapeTreeGeneratorControl, ShapeTreeGeneratorReference, ShapeTreeGeneratorResult } from '@todo/ShapeTreeGenerator';
 
+// @Getter @Setter
 // @Slf4j
 export class ShapeTree {
   private documentContentsLoader: DocumentContentsLoader;
   private id: string;
   private expectedResourceType: string;
-  private validatedByShapeUri: string;
-  private label: string;
-  private supports: string;
+  private validatedByShapeUri: string | null = null;
+  private label: string | null = null;
+  private supports: string | null;
   private contains: URL[] = new Array();
   private references: ReferencedShapeTree[];
 
@@ -33,13 +35,23 @@ export class ShapeTree {
   setId(id: string): void { this.id = id; }
   getExpectedResourceType(): string { return this.expectedResourceType; }
   setExpectedResourceType(expectedResourceType: string): void { this.expectedResourceType = expectedResourceType; }
+
+  getValidatedByShapeUri(): string | null { return this.validatedByShapeUri; }
+  setValidatedByShapeUri(validatedByShapeUri: string | null): void { this.validatedByShapeUri = validatedByShapeUri }
+  getLabel(): string | null { return this.label; }
+  setLabel(label: string | null): void { this.label = label }
+  getSupports(): string | null { return this.supports; }
+  setSupports(supports: string | null): void { this.supports = supports }
+  getContains(): URL[] { return this.contains; }
+  setContains(contains: URL[]): void { this.contains = contains }
   getReferences(): ReferencedShapeTree[] { return this.references; }
+  setReferences(references: ReferencedShapeTree[]): void { this.references = references }
 
   public getURI(): URL /* throws URISyntaxException */ {
     return new URL(this.id);
   }
 
-  public validateContent(graph: Store, focusNodeURI: URL, resourceType: ShapeTreeResourceType): ValidationResult /* throws IOException, URISyntaxException */ {
+  public async validateContent(graph: Store, focusNodeURI: URL, resourceType: ShapeTreeResourceType): Promise<ValidationResult> /* throws IOException, URISyntaxException */ {
     if (this.expectsContainer() !== (resourceType === ShapeTreeResourceType.CONTAINER)) {
       throw new ShapeTreeException(400, 'The resource type being validated does not match the type expected by the ShapeTree');
     }
@@ -60,12 +72,12 @@ export class ShapeTree {
       schema = SchemaCache.getSchema(shapeResourceURI)!!;
     } else {
       log.debug('Did not find schema in cache {} will retrieve and parse', shapeResourceURI);
-      const shexShapeContents: DocumentContents = this.documentContentsLoader.loadDocumentContents(shapeResourceURI);
-      if (shexShapeContents == null || shexShapeContents.getBody() == null || shexShapeContents.getBody().length === 0) {
+      const shexShapeContents: DocumentContents = await this.documentContentsLoader.loadDocumentContents(shapeResourceURI);
+      const shapeBody: string | null = shexShapeContents.getBody();
+      if (shexShapeContents === null || shapeBody === null || shapeBody.length === 0) { // @@ pick one of: null or length===0
         throw new ShapeTreeException(400, 'Attempting to validate a ShapeTree (' + this.id + ') - Shape at (' + resolvedShapeURI + ') is not found or is empty');
       }
 
-      const shapeBody: string = shexShapeContents.getBody();
       /*
       const stream: InputStream = new ByteArrayInputStream(shapeBody.getBytes());
       const shexCParser: ShExCParser = new ShExCParser();
@@ -83,7 +95,7 @@ export class ShapeTree {
     // Tell ShExJava we want to use Jena as our graph library
     const jenaRDF: JenaRDF = new org.apache.commons.rdf.jena.JenaRDF();
     GlobalFactory.RDFFactory = jenaRDF;
-
+  
     const validation: ValidationAlgorithm = new RecursiveValidation(schema, jenaRDF.asGraph(graph));
     const shapeLabel: Label = new Label(GlobalFactory.RDFFactory.createIRI(this.validatedByShapeUri));
     const focusNode: IRI = GlobalFactory.RDFFactory.createIRI(focusNodeURI.toString());
@@ -95,7 +107,7 @@ export class ShapeTree {
     return new ValidationResult(valid);
   }
 
-  public findMatchingContainsShapeTree(requestedName: string, targetShapeTreeHint: URL, resourceType: ShapeTreeResourceType): ShapeTree | null /* throws URISyntaxException, ShapeTreeException */ {
+  public async findMatchingContainsShapeTree(requestedName: string, targetShapeTreeHint: URL, resourceType: ShapeTreeResourceType): Promise<ShapeTree | null> /* throws URISyntaxException, ShapeTreeException */ {
     if (/* @@ delme this.contains === null || */ this.contains.length === 0) {
       if (this.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_RESOURCE) {
         return this;
@@ -104,7 +116,7 @@ export class ShapeTree {
     }
 
     for (const childShapeTreeURI of this.contains) {
-      const childShapeTree: ShapeTree = ShapeTreeFactory.getShapeTree(childShapeTreeURI);
+      const childShapeTree: ShapeTree | null = await ShapeTreeFactory.getShapeTree(childShapeTreeURI);
       if (childShapeTree == null) {
         continue;
       }
@@ -159,53 +171,133 @@ export class ShapeTree {
     return null;
   }
 
-  public getReferencedShapeTrees(recursionMethods: RecursionMethods = RecursionMethods.DEPTH_FIRST): Iterator<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException */ {
-    return this.getReferencedShapeTreesList(recursionMethods).iterator();
-  }
-
   private expectsContainer(): boolean {
     return this.getExpectedResourceType() !== null && this.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_CONTAINER;
   }
 
-  private getReferencedShapeTreesList(recursionMethods: RecursionMethods): ReferencedShapeTree[] /* throws URISyntaxException, ShapeTreeException */ {
-    if (recursionMethods === RecursionMethods.BREADTH_FIRST) {
-      return this.getReferencedShapeTreesListBreadthFirst();
-    }
-    const referencedShapeTrees: ReferencedShapeTree[] = new Array();
-    return this.getReferencedShapeTreesListDepthFirst(this.getReferences(), referencedShapeTrees);
-  }
+  // public getReferencedShapeTrees(recursionMethods: RecursionMethods = RecursionMethods.DEPTH_FIRST): Iterator<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException */ {
+  // }
 
-  private getReferencedShapeTreesListBreadthFirst(): List<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException */ {
-    const referencedShapeTrees: ReferencedShapeTree[] = new Array();
-    const queue: Queue<ReferencedShapeTree> = new LinkedList<>(this.getReferences());
+  /**
+   * recursively get the list of referenced ShapeTree steps
+   * @TODO:
+   *   use generator?
+   *   make efficient (capture and proxy nested iterators in .next())
+   *   add referrers stack a la: { referrers: [<#org>, <#repo>, <#issue>, <#comment>] }
+   * @returns {Iterable}
+   */
+  async *getReferencedShapeTrees(control = ShapeTreeGeneratorControl.DEFAULT, via: ShapeTreeGeneratorReference[] = []): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
+    const _RemoteShapeTree = this
+    yield* walkLocalTree(new URL(this.id), control, via)
 
-    while (!queue.isEmpty()) {
-      const currentShapeTree: ReferencedShapeTree = queue.poll();
-      referencedShapeTrees.push(currentShapeTree);
-      const shapeTree: ShapeTree = ShapeTreeFactory.getShapeTree(currentShapeTree.getReferencedShapeTreeURI());
-      if (shapeTree !== null) {
-        const currentReferencedShapeTrees: ReferencedShapeTree[] = shapeTree.getReferences();
-        if (currentReferencedShapeTrees != null) {
-          queue.addAll(currentReferencedShapeTrees);
+    // Iterate over this ShapeTree.
+    async function* walkLocalTree(from: URL, control: ShapeTreeGeneratorControl, via: ShapeTreeGeneratorReference[] = []): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
+      const stepOrNull: ShapeTree | null = await ShapeTreeFactory.getShapeTree(from)!!;
+      if (stepOrNull === null)
+        throw new ShapeTreeException(422, `ShapeTree ${from} not found`); // @@ not found in [...] would be more helpful but reveals cache
+      const step: ShapeTree = stepOrNull; // @@ better dance?
+
+      // Queue contents and references.
+      for (const i in step.contains) {
+        const r = step.contains[i]
+
+        // Steps have URLs so reference by id.
+        const result = { type: 'contains', target: r }
+        if (control & ShapeTreeGeneratorControl.REPORT_CONTAINS) // Only report references (for now).
+          control = defaultControl(yield { result, via }, control)
+
+        if (control & ShapeTreeGeneratorControl.RECURSE_CONTAINS)
+          yield* visit(r, result)
+      }
+
+      for (const i in step.references) {
+        const r = step.references[i]
+
+        // References don't have URLs so so include verbatim.
+        const result = { type: 'reference', target: r.getReferencedShapeTreeURI() }
+        if (control & ShapeTreeGeneratorControl.REPORT_REERENCES)
+          control = defaultControl(yield { result, via }, control)
+
+        if (control & ShapeTreeGeneratorControl.RECURSE_REERENCES)
+          yield* visit(r.getReferencedShapeTreeURI(), result)
+      }
+
+      async function* visit(stepName: URL, result: ShapeTreeGeneratorReference): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
+        let remote: ShapeTree | null = null;
+        // Avoid cycles by looking in via for stepName.
+        if (!(via.find(v => v.target.href === stepName.href))) {
+          if (noHash(stepName).href === noHash(new URL(_RemoteShapeTree.id)).href)
+            // (optimization) In-tree links can recursively call this generator.
+            yield* walkLocalTree(stepName, control, via.concat(result));
+          else {
+            // (general case) Parse a new RemoteShapeTree.
+            remote = await ShapeTreeFactory.getShapeTree(stepName);
+            if (remote !== null)
+              yield* remote.getReferencedShapeTrees(control, via.concat(result));
+          }
         }
       }
     }
-    return referencedShapeTrees;
   }
 
-  private getReferencedShapeTreesListDepthFirst(currentReferencedShapeTrees: ReferencedShapeTree[], referencedShapeTrees: ReferencedShapeTree[]): ReferencedShapeTree[] /* throws URISyntaxException, ShapeTreeException */ {
-    for (const currentShapeTreeReference of currentReferencedShapeTrees) {
-      referencedShapeTrees.push(currentShapeTreeReference);
-      const currentReferencedShapeTree: ShapeTree = ShapeTreeFactory.getShapeTree(currentShapeTreeReference.getReferencedShapeTreeURI());
-      if (currentReferencedShapeTree != null) {
-        // eslint-disable-next-line no-param-reassign
-        referencedShapeTrees = this.getReferencedShapeTreesListDepthFirst(currentReferencedShapeTree.getReferences(), referencedShapeTrees);
-      }
-    }
-    return referencedShapeTrees;
+  /*
+  public getReferencedShapeTrees(recursionMethods: RecursionMethods = RecursionMethods.DEPTH_FIRST): Iterator<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException * / {
+    return this.getReferencedShapeTreesList(recursionMethods).iterator();
   }
+
+  /*
+    private getReferencedShapeTreesList(recursionMethods: RecursionMethods): ReferencedShapeTree[] /* throws URISyntaxException, ShapeTreeException * / {
+      if (recursionMethods === RecursionMethods.BREADTH_FIRST) {
+        return this.getReferencedShapeTreesListBreadthFirst();
+      }
+      const referencedShapeTrees: ReferencedShapeTree[] = new Array();
+      return this.getReferencedShapeTreesListDepthFirst(this.getReferences(), referencedShapeTrees);
+    }
+  
+    private getReferencedShapeTreesListBreadthFirst(): List<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException * / {
+      const referencedShapeTrees: ReferencedShapeTree[] = new Array();
+      const queue: Queue<ReferencedShapeTree> = new LinkedList<>(this.getReferences());
+  
+      while (!queue.isEmpty()) {
+        const currentShapeTree: ReferencedShapeTree = queue.poll();
+        referencedShapeTrees.push(currentShapeTree);
+        const shapeTree: ShapeTree = ShapeTreeFactory.getShapeTree(currentShapeTree.getReferencedShapeTreeURI());
+        if (shapeTree !== null) {
+          const currentReferencedShapeTrees: ReferencedShapeTree[] = shapeTree.getReferences();
+          if (currentReferencedShapeTrees != null) {
+            queue.addAll(currentReferencedShapeTrees);
+          }
+        }
+      }
+      return referencedShapeTrees;
+    }
+  
+    private getReferencedShapeTreesListDepthFirst(currentReferencedShapeTrees: ReferencedShapeTree[], referencedShapeTrees: ReferencedShapeTree[]): ReferencedShapeTree[] /* throws URISyntaxException, ShapeTreeException * / {
+      for (const currentShapeTreeReference of currentReferencedShapeTrees) {
+        referencedShapeTrees.push(currentShapeTreeReference);
+        const currentReferencedShapeTree: ShapeTree = ShapeTreeFactory.getShapeTree(currentShapeTreeReference.getReferencedShapeTreeURI());
+        if (currentReferencedShapeTree != null) {
+          // eslint-disable-next-line no-param-reassign
+          referencedShapeTrees = this.getReferencedShapeTreesListDepthFirst(currentReferencedShapeTree.getReferences(), referencedShapeTrees);
+        }
+      }
+      return referencedShapeTrees;
+    }
+  */
 
   private exceptionMessage(requestedName: string, id: string, customMessage: string): string {
     return 'Failed to match [' + requestedName + '] against any :contents for [' + id + ']. ' + customMessage;
   }
 }
+
+function noHash(url: URL) {
+  const u = url.href
+  return new URL(u.substr(0, u.length - url.hash.length))
+}
+
+function defaultControl(newValue: ShapeTreeGeneratorControl | undefined, oldValue: ShapeTreeGeneratorControl): ShapeTreeGeneratorControl {
+  return newValue === undefined
+    ? oldValue
+    : newValue
+}
+
