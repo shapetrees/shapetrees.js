@@ -1,0 +1,183 @@
+statusCode: 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  BASE <${SERVER_BASE}/static/shex/solid-interop/shex#>
+  PREFIX eco: <http://www.w3.org/ns/solid/ecosystem#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+  PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>
+
+
+  ################################################################
+  # Agent
+  ################################################################
+
+  # Validate an instance of the eco:Agent class
+    <AgentShape> {
+    a [ eco:Agent ] ;
+    eco:hasRegistrar IRI
+  }
+
+  ################################################################
+  # Registrar
+  ################################################################
+
+  # Registrar
+  # Validate an instance of the eco:Registrar class
+    <RegistrarShape> {
+    a [ eco:Registrar ] ;
+    eco:hasApplicationRegistrySet IRI ;
+    eco:hasDataRegistrySet IRI
+  }
+
+  # Application Registry Set
+  # Validate an instance of the eco:ApplicationRegistrySet class
+  ################################################################
+    <ApplicationRegistrySetShape> {
+    a [ eco:ApplicationRegistrySet ] ;
+    eco:hasRegistry IRI+
+  }
+
+  # Application Registry
+  # Validate an instance of the eco:ApplicationRegistry class
+  ################################################################
+    <ApplicationRegistryShape> {
+    a [ eco:ApplicationRegistry ] ;
+    eco:hasRegistration IRI*
+  }
+
+  # Application Registration
+  # Validate an instance of the eco:ApplicationRegistration class
+  ################################################################
+    <ApplicationRegistrationShape> {
+    a [ eco:ApplicationRegistration ] ;
+    eco:registeredBy IRI ;
+    eco:registeredWith IRI ;
+    eco:registeredAt xsd:dateTime ;
+    eco:registeredApplication IRI
+  }
+
+  # Data Registry Set
+  # Validate an instance of the eco:DataRegistrySet class
+  ################################################################
+    <DataRegistrySetShape> {
+    a [ eco:DataRegistrySet ] ;
+    eco:hasRegistry IRI+
+  }
+
+  # Data Registry
+  # Validate an instance of the eco:DataRegistry class
+  ################################################################
+    <DataRegistryShape> {
+    a [ eco:DataRegistry ] ;
+    eco:hasRegistration IRI*
+  }
+
+  # Data Registration
+  # Validate an instance of the eco:DataRegistration class
+  ################################################################
+    <DataRegistrationShape> {
+    a [ eco:DataRegistration ] ;
+    eco:registeredBy IRI ;
+    eco:registeredWith IRI ;
+    eco:registeredAt xsd:dateTime ;
+    eco:registeredShapeTree IRI ;
+    eco:hasRegisteredDataInstance IRI*
+  }
+
+  ################################################################
+  # Application
+  ################################################################
+
+  # Validate an instance of the eco:Application class
+    <ApplicationShape> {
+    a [ eco:Application ] ;
+    eco:applicationName xsd:string ;
+    eco:applicationDescription xsd:string ;
+    eco:applicationAuthor IRI ;
+    eco:applicationAuthorName xsd:string ;
+    eco:applicationThumbanil IRI ;
+    eco:hasAccessNeedGroup IRI* ;
+    eco:hasCollaborativeAccessNeedGroup IRI*
+  }
+
+  ################################################################
+  # Access Need Groups
+  ################################################################
+
+  # Validate an instance of the eco:AccessNeedGroup class
+    <AccessNeedGroupShape> {
+    a [ eco:AccessNeedGroup ] ;
+    eco:accessNecessity [ eco:AccessRequired eco:AccessOptional ] ;
+    eco:authenticatesAs IRI ;
+    eco:hasAccessNeed IRI+ ;
+    eco:hasAccessNeedOverride IRI* ;
+    eco:hasAccessDecoratorIndex IRI
+  }
+
+  # Validate an instance of the eco:AccessNeed class
+    <AccessNeedShape> {
+    a [ eco:AccessNeed ] ;
+    eco:inAccessNeedGroup IRI+ ;
+    eco:registeredShapeTree IRI ;
+    eco:hasRegisteredDataInstance IRI* ;
+    eco:recursivelyAuthorize [ true false ] ;
+    eco:accessMode [ acl:Read acl:Write acl:Append acl:Control ]+ ;
+    eco:accessNecessity [ eco:AccessRequired eco:AccessOptional ] ;
+  }
+
+  # Validate an instance of a prepared eco:PreparedAccessNeedGroup class
+    <PreparedAccessNeedGroupShape> {
+    a [ eco:PreparedAccessNeedGroup ] ;
+    eco:hasAccessNeedGroupDecorator IRI ;
+    eco:authenticatesAs IRI ;
+    eco:accessNecessity [ eco:AccessRequired eco:AccessOptional ] ;
+    eco:hasPreparedAccessNeed IRI+ ;
+  }
+
+  # Validate an instance of the eco:PreparedAccessNeed class
+    <PreparedAccessNeedShape> {
+    a [ eco:PreparedAccessNeed ] ;
+    eco:inPreparedAccessNeedGroup IRI+ ;
+    eco:hasShapeTreeDecorator IRI ;
+    eco:hasAccessNeedDecorator IRI? ;
+    eco:hasDataRegistrationGrant IRI? ;
+    eco:hasRegisteredDataInstance IRI* ;
+    eco:registeredShapeTree IRI ;
+    eco:accessMode [ acl:Read acl:Write acl:Append acl:Control ]+ ;
+    eco:accessNecessity [ eco:AccessRequired eco:AccessOptional ] ;
+    eco:supportedBy IRI* ;
+    eco:supports IRI ;
+    eco:referencesPreparedAccessNeed IRI* ;
+    skos:narrower IRI* ;
+  }
+
+  ################################################################
+  # Access Grants
+  ################################################################
+
+  # Validate an instance of the AccessGrant class
+    <AccessGrant> {
+    a [ eco:AccessGrant ] ;
+    eco:accessGrantSubject IRI ;
+    eco:hasPreparedAccessNeedGroup IRI+ ;
+    eco:hasDataRegistrationGrant IRI+
+  }
+
+    <AccessGrantSubject> {
+    a [ eco:AccessGrantSubject ] ;
+    eco:accessGrantSubjectAgent IRI? ;
+    eco:accessGrantSubjectApplication IRI?
+  }
+
+  # Validate an instance of the DataRegistrationGrant class
+    <DataRegistrationGrant> {
+    a [ eco:DataRegistrationGrant ] ;
+    eco:hasRegistration IRI ;
+    eco:registeredShapeTree IRI ;
+    eco:satisfiesPreparedAccessNeed IRI ;
+    eco:scopeOfDataRegistrationGrant [ eco:SelectedInstances eco:AllInstances eco:InheritInstances eco:NoAccess ] ;
+    eco:inheritsFromDataRegistrationGrant IRI*
+  }

@@ -1,0 +1,12 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  <>
+    <http://www.w3.org/ns/shapetree#hasShapeTreeLocator> <#shapetree> .
+
+  <#shapetree>
+    <http://www.w3.org/ns/shapetree#hasRootShapeTree> <${SERVER_BASE}/static/shapetrees/github-deep/shapetree#root> ;
+    <http://www.w3.org/ns/shapetree#hasShapeTree> <${SERVER_BASE}/static/shapetrees/github-deep/shapetree#org> ;
+    <http://www.w3.org/ns/shapetree#hasShapeTreeInstanceRoot> <${SERVER_BASE}/ldp/data/Git/> .

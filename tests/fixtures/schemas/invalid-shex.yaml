@@ -1,0 +1,18 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/plain'
+body: >
+  PREFIX fhir: <http://hl7.org/fhir/>
+  PREFIX fhirvs: <http://hl7.org/fhir/ValueSet/>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  BASE <${SERVER_BASE}/static/shex/fhir/r4/shex#>
+
+    start=@<All>
+
+    # Tracks balance, charges, for patient or cost center
+    <Account> CLOSED {
+    a [fhir:Account];
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:Resource.id @<id>?;
+    fhir:Resource.meta @<Meta>?;

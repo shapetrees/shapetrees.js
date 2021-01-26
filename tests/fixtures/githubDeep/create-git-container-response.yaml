@@ -1,0 +1,7 @@
+statusCode : 201
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+  - 'Link:<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'
+  - 'Location:${SERVER_BASE}/ldp/data/Git/'
+body: >

@@ -1,0 +1,82 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  @prefix st: <http://www.w3.org/ns/shapetree#> .
+  @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+  @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+  @prefix med: <http://shapetrees.pub/ts/medical-record/> .
+
+  <>
+    st:hasShapeTreeDecoratorIndex med:decorator-index .
+
+  <#noContains>
+    st:matchesUriTemplate "{id}" ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#noContainsResource>
+    st:matchesUriTemplate "{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containsTemplateDuplication>
+    st:contains <#containedTemplateA>, <#containedTemplateACopy>, st:AllowNone ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containsMultipleByTemplate>
+    st:contains <#containedTemplateA>, <#containedTemplateB>, <#containedTemplateC>, st:AllowNone ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containedTemplateA>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "a-{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containedTemplateACopy>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "a-{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containedTemplateB>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "b-{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containedTemplateC>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "c-{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containsByHint>
+    st:contains <#containedHint>, st:AllowNone ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containedHint>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "{id}" ;
+    st:expectsType st:ShapeTreeResource .
+
+  <#containsAllowNonRDF>
+    st:contains <#unlikelyTemplateMatch>, st:AllowNonRDFSources ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containsAllowNone>
+    st:contains <#unlikelyTemplateMatch>, st:AllowNone ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containsAllowUndefined>
+    st:contains <#unlikelyTemplateMatch> ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containsAllowContainer>
+    st:contains <#unlikelyTemplateMatch>, st:AllowContainers ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#containsAllowResource>
+    st:contains <#unlikelyTemplateMatch>, st:AllowResources ;
+    st:expectsType st:ShapeTreeContainer .
+
+  <#unlikelyTemplateMatch>
+    st:validatedBy <${SERVER_BASE}/static/shex/fhir/r4/shex#Patient> ;
+    st:matchesUriTemplate "asdfasdfasdf" ;
+    st:expectsType st:ShapeTreeResource .

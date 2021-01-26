@@ -1,0 +1,7 @@
+statusCode : 201
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+  - 'Link:<http://www.w3.org/ns/ldp#Resource>; rel="type"'
+  - 'Location:${SERVER_BASE}/ldp/conditions/condition1.ttl'
+body: >

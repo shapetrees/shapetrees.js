@@ -1,0 +1,5 @@
+statusCode : 404
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >

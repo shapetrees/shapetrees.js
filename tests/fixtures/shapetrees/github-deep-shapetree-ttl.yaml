@@ -1,0 +1,63 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  @prefix st: <http://www.w3.org/ns/shapetree#> .
+  @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+  @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+  <#root>
+    st:expectsType st:ShapeTreeContainer ;
+    st:contains <#repos>, <#users> .
+
+  <#repos>
+    st:expectsType st:ShapeTreeContainer ;
+    rdfs:label "repos" ;
+    st:contains <#org> .
+
+  <#org>
+    st:expectsType st:ShapeTreeContainer ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#OrgShape> ;
+    st:matchesUriTemplate "{orgName}" ;
+    st:contains <#repo> .
+
+  <#repo>
+    st:expectsType st:ShapeTreeContainer ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#RepoShape> ;
+    st:matchesUriTemplate "{repoName}" ;
+    st:contains <#issues> .
+
+  <#issues>
+    st:expectsType st:ShapeTreeContainer ;
+    rdfs:label "issues" ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#C_IssueShape> ;
+    st:matchesUriTemplate "{repoName}" ;
+    st:contains <#issue> .
+
+  <#issue>
+    st:expectsType st:ShapeTreeContainer ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#IssueShape> ;
+    st:matchesUriTemplate "{issueNo}" ;
+    st:contains <#comments> .
+
+  <#comments>
+    st:expectsType st:ShapeTreeContainer ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#C_CommentShape> ;
+    rdfs:label "comments" ;
+    st:contains <#comment> .
+
+  <#comment>
+    st:expectsType st:ShapeTreeResource ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#CommentShape> ;
+    st:matchesUriTemplate "{commentNo}" .
+
+  <#users>
+    st:expectsType st:ShapeTreeContainer ;
+    rdfs:label "users" ;
+    st:contains <#user> .
+
+  <#user>
+    st:expectsType st:ShapeTreeContainer ;
+    st:validatedBy <${SERVER_BASE}/static/shex/github/shex#UserShape> ;
+    st:matchesUriTemplate "{userName}" .

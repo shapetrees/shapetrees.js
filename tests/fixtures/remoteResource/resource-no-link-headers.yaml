@@ -1,0 +1,6 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  <#a> <#b> <#c> .
