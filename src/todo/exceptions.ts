@@ -32,8 +32,8 @@ class NullPointerException extends RuntimeException {
 }
 
 class ProgramFlowException extends RuntimeException { // @@ probably reflects my lack of understanding of typescript -- ericP
-  constructor() {
-    super('Should not arrive here');
+  constructor(message?: string) {
+    super(message || 'Should not arrive here');
   }
 }
 

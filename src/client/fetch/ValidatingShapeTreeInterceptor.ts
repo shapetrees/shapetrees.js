@@ -42,7 +42,7 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
   // @Override
   public async intercept(/* @NotNull */ chain: Chain): Promise<Response> /* throws IOException */ {
     const shapeTreeRequest: ShapeTreeRequest<Request> = new FetchShapeTreeRequest(chain.request());
-    const resourceAccessor: ResourceAccessor = new FetchRemoteResourceAccessor();
+    const resourceAccessor: ResourceAccessor = await new FetchRemoteResourceAccessor();
 
     // Get the handler
     const handler: ValidatingMethodHandler | null = this.getHandler(shapeTreeRequest.getMethod(), resourceAccessor);
@@ -51,9 +51,8 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
         const shapeTreeResponse: ShapeTreeValidationResponse = await handler.validateRequest(shapeTreeRequest);
         if (shapeTreeResponse.isValidRequest() && !shapeTreeResponse.isRequestFulfilled()) {
           return await chain.proceed(chain.request());
-        } else {
-          return this.createResponse(shapeTreeRequest, shapeTreeResponse);
         }
+        return this.createResponse(shapeTreeRequest, shapeTreeResponse);
       } catch (ex/*: ShapeTreeException */) {
         if (ex instanceof ShapeTreeException) {
           log.error("Error processing shape tree request: ", ex);
@@ -63,7 +62,7 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
           log.error("Error processing shape tree request: ", ex);
           return this.createErrorResponse(new ShapeTreeException(500, ex.message), shapeTreeRequest);
         }
-        throw new ProgramFlowException();
+        throw new ProgramFlowException(ex.stack);
       }
     } else {
       log.warn("No handler for method [{}] - passing through request", shapeTreeRequest.getMethod());
@@ -109,7 +108,7 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
 
     builder.body(ResponseBody.create(response.getBody() || '', MediaType.get(contentType)))
       // @@ .protocol(Protocol.HTTP_2)
-      .code(200) // .message("Success")
+      // .message("Success")
       .request(request.getNativeRequest());
 
     return builder.build();

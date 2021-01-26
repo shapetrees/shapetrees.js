@@ -30,10 +30,10 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
   public async validateRequest(shapeTreeRequest: ShapeTreeRequest<any>): Promise<ShapeTreeValidationResponse> {
     try {
       const shapeTreeContext: ShapeTreeContext = this.buildContextFromRequest(shapeTreeRequest);
-      const existingResource: ShapeTreeResource = this.getRequestResource(shapeTreeContext, shapeTreeRequest);
+      const existingResource: ShapeTreeResource = await this.getRequestResource(shapeTreeContext, shapeTreeRequest);
       shapeTreeRequest.setResourceType(this.determineResourceType(shapeTreeRequest, existingResource));
 
-      this.ensureRequestResourceExists(existingResource, "Parent Container not found");
+      this.ensureRequestResourceExists(existingResource, `Parent Container ${existingResource.getUri().href} not found`);
 
       let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, uuid().toString());
       const incomingRequestShapeTreeUris: string[] = this.getIncomingLinkHeaderByRelationValue(shapeTreeRequest, LinkRelations.SHAPETREE);
@@ -138,9 +138,9 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
     const targetContainerURI: URL = new URL(requestedName, requestURI);
 
     // Determine if the target container exists, if so, retrieve any existing ShapeTrees to validate alongside the newly requested ones
-    const targetContainerResource: ShapeTreeResource = this.resourceAccessor.getResource(shapeTreeContext, targetContainerURI);
+    const targetContainerResource: ShapeTreeResource = await this.resourceAccessor.getResource(shapeTreeContext, targetContainerURI);
     if (targetContainerResource.isExists()) {
-      const targetContainerMetadataResource: ShapeTreeResource = this.getShapeTreeMetadataResourceForResource(shapeTreeContext, targetContainerResource);
+      const targetContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, targetContainerResource);
       if (targetContainerMetadataResource.isExists()) {
         const targetContainerMetadataGraph: Store = this.getGraphForResource(targetContainerMetadataResource, targetContainerURI) ||
           (() => { throw new ShapeTreeException(422, "Unable to read graph from " + targetContainerURI) })();

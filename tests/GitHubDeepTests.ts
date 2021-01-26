@@ -29,7 +29,13 @@ describe('GitHubDeepTests', () => {
 
     const u2 = data;
     const b2 = `document at ${data}`;
-    await mockServer.get(data).thenReply(200, b2);
+    await mockServer.get(data).thenReply(200, b2, {
+      'Content-type': 'text/plain',
+      'Cookie-set': [ // test repeated cookies per https://tools.ietf.org/html/rfc7230#section-3.2.2
+        'language=pl; expires=Sat, 15-Jul-2017 23:58:22 GMT; path=/; domain=x.com',
+        'id=123 expires=Sat, 15-Jul-2017 23:58:22 GMT; path=/; domain=x.com; httponly'
+      ]
+    });
     const resp = await fetch(mockServer.urlFor(data))
     expect(await resp.text()).to.equal(b2)
     // response = await superagent.get(mockServer.urlFor(u2)).proxy(mockServer.url);
@@ -40,14 +46,17 @@ describe('GitHubDeepTests', () => {
     it('plantGitRootCreatesStatics', async () => { // the single test
       const u = new URL(mockServer.urlFor(data));
       const creates = new URL('created', u);
-      await mockServer.post(u).thenReply(200, 'asdf', {
-        'Location': creates.href,
-        'Cookie-set': [ // test repeated cookies per https://tools.ietf.org/html/rfc7230#section-3.2.2
-          'language=pl; expires=Sat, 15-Jul-2017 23:58:22 GMT; path=/; domain=x.com',
-          'id=123 expires=Sat, 15-Jul-2017 23:58:22 GMT; path=/; domain=x.com; httponly'
-        ]
-      });
-      await shapeTreeClient.plantShapeTree(
+      await Promise.all([
+        mockServer.post(u).thenReply(200, 'asdf', {
+          'Location': creates.href,
+          'Content-type': 'text/plain'
+        }),
+        mockServer.get(u).thenReply(200, 'asdf', {
+          'Location': creates.href,
+          'Content-type': 'text/plain',
+        })
+      ]);
+      const newUrl: URL = await shapeTreeClient.plantShapeTree(
         context,
         u,
         mockServer.urlFor('/static/shapetrees/github-deep/shapetree#root'),

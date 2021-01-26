@@ -112,15 +112,15 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
       }
       throw new IOException(`${response.code()} No Location Header provided`);
     } else {
-      let responseBodyString: string | null = null;
+      let responseBodyString: string = '- response body unavailable -';
       try {
         const body: ResponseBody | null = response.body();
-        if (body != null) {
-          responseBodyString = body.string();
+        if (body !== null) {
+          responseBodyString = body!!.string(); // isn't the non-null-ness clear to tsc?
         }
       } catch {
-        throw new IOException(`${response.code()} ${responseBodyString}`);
       }
+      throw new IOException(`${response.code()} ${responseBodyString}`);
     }
   }
 

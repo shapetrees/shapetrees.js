@@ -28,6 +28,7 @@ export class RemoteResource {
   private parsedGraph: Store;
   private rawBody: string;
   private clientConfiguration = new ShapeTreeClientConfiguration(false, false);
+  public ready: Promise<void>;
 
   public constructor(uriString: string | URL, authorizationHeaderValue: string | null) /* throws IOException */ {
     if (uriString instanceof URL) {
@@ -42,7 +43,7 @@ export class RemoteResource {
       this.uri = requestUri;
     }
     this.authorizationHeaderValue = authorizationHeaderValue;
-    this.dereferenceURI();
+    this.ready = this.dereferenceURI();
   }
 
   public getUri(): URL /* throws IOException */ {
@@ -181,14 +182,16 @@ export class RemoteResource {
     }
 
     const request /*: Request */ = requestBuilder.build();
-
-    try {
-      const response: Response = await httpClient.newCall(request).execute();
-      this.parseResponseToRemoteResource(response);
-      this.invalidated = false;
-    } catch (e /* Exception */) {
-      log.error('Error dereferencing URI', e);
+    // try { // disabled try catch to propagate 500s
+    const response: Response = await (httpClient.newCall(request)).execute(); // @@ differs from java
+    if (response.code() >= 500) {
+      throw Error(`${request.method} ${request.url} => ${response.code()} ${response.body()!!.string()}`)
     }
+    this.parseResponseToRemoteResource(response);
+    this.invalidated = false;
+    // } catch (e /* Exception */) {
+    //   log.error('Error dereferencing URI', e);
+    // }
   }
 
   private parseResponseToRemoteResource(response: Response): void /* throws IOException */ {

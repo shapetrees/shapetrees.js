@@ -166,9 +166,8 @@ class HttpCall {
           respHeaders.set(header, [value]);
         }
         const text: string = await resp.text();
-        return new Response(resp.status, new ResponseBody(text, (resp.headers.get('content-type') || [null])[0]), respHeaders, request);
+        return new Response(resp.status, new ResponseBody(text, resp.headers.get('content-type')), respHeaders, request);
       } catch (e) {
-        console.warn(`${request.method}ing ${request.url}`, e);
         throw new IOException(`${request.method}ing ${request.url}`, e);
       }
     }
@@ -230,17 +229,17 @@ class Response {
   _body: ResponseBody = new ResponseBody('Response not initialized', 'text/plain');
 
   // eslint-disable-next-line class-methods-use-this
-  body(): ResponseBody | null { return new ResponseBody(); }
+  body(): ResponseBody | null { return this._body; }
 }
 
 class ResponseBody {
   // eslint-disable-next-line class-methods-use-this
   constructor(
-    public text: string = '',
-    public mediaType: string | null = null,
+    public text: string,
+    public mediaType: string | null,
   ) { }
 
-  string(): string { return ''; }
+  string(): string { return this.text; }
 
   static create(text: string, mediaType: string): ResponseBody { return new ResponseBody(text, mediaType); }
 }

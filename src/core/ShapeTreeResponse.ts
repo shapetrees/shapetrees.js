@@ -10,7 +10,7 @@ export class ShapeTreeResponse {
   setBody(body: string | null) { this.body = body; }
   getBody(): string | null { return this.body; }
 
-  protected headers: Map<string, string[]>;
+  protected headers: Map<string, string[]> = new Map();
 
   setHeaders(headers: Map<string, string[]>) { this.headers = headers; }
 

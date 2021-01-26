@@ -33,7 +33,7 @@ module.exports = {
     'no-empty-function': 'off',
     'sort-imports': ['error', { ignoreDeclarationSort: true }],
     'max-len': ['error', {
-      code: 250 /* @@ */, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreTrailingComments: true, ignoreComments: true, ignoreStrings: true,
+      code: 500 /* @@ */, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreTrailingComments: true, ignoreComments: true, ignoreStrings: true,
     }],
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'import/no-default-export': ['error'],

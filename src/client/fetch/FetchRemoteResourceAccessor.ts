@@ -15,11 +15,13 @@ import { ShapeTreeHttpClientHolder } from './ShapeTreeHttpClientHolder';
 export class FetchRemoteResourceAccessor implements ResourceAccessor {
 
   // @Override
-  public getResource(context: ShapeTreeContext, resourceURI: URL): ShapeTreeResource /* throws ShapeTreeException */ {
+  public async getResource(context: ShapeTreeContext, resourceURI: URL): Promise<ShapeTreeResource> /* throws ShapeTreeException */ {
     try {
-      return this.mapRemoteResourceToShapeTreeResource(new RemoteResource(resourceURI, context.getAuthorizationHeaderValue()));
+      const remoteResource: RemoteResource = new RemoteResource(resourceURI, context.getAuthorizationHeaderValue());
+      await remoteResource.ready;
+      return this.mapRemoteResourceToShapeTreeResource(remoteResource);
     } catch (ex/*: Exception*/) {
-      throw new ShapeTreeException(500, ex.getMessage());
+      throw new ShapeTreeException(500, ex.message);
     }
   }
 

@@ -46,6 +46,8 @@ default \(public\) +\([^ ]+\) +\([a-zA-Z0-9_]+\)(\([^)]*\)) → \1 \3(\4): \2
 
 * \[java and ts] should we name a type for `Map<string, string[]>`, or should we reuse Headers from some HTTP API?
 
+* java likes `||`/`&&` on previous line. can eslint be taught to like that?
+
 * wrap headers to change `| undefined`s to `| null`
 
 * converted `for(Foo foo: fooz)` to `for(const foo of fooz` (elides type)
@@ -55,6 +57,8 @@ default \(public\) +\([^ ]+\) +\([a-zA-Z0-9_]+\)(\([^)]*\)) → \1 \3(\4): \2
 * s/model/graph/g
 
 * guessing that @Getter emits e.g. `isRequestFulfilled(): boolean` for booleans. true?
+
+* delete ModelFactory{,Base}?
 
 * I wasn't disciplined about considering repsonse codes on this idiom: ```typescript
  ||
