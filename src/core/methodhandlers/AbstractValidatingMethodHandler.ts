@@ -297,31 +297,19 @@ export abstract class AbstractValidatingMethodHandler {
    * @throws ShapeTreeException ShapeTreeException
    */
   protected getShapeTreeMetadataURIForResource(shapeTreeResource: ShapeTreeResource): URL /* throws ShapeTreeException */ {
-    const linkHeaders: Map<string, string[]> = HttpHeaderHelper.parseLinkHeadersToMap(shapeTreeResource.getAttributes().get(HttpHeaders.LINK));
+    const attr = '' + HttpHeaders.LINK.toLowerCase();
+    const linkHeaders: Map<string, string[]> = HttpHeaderHelper.parseLinkHeadersToMap(shapeTreeResource.getAttributes().get(attr));
 
     if (!linkHeaders.has(LinkRelations.SHAPETREE)) {
       log.error('The resource {} does not contain a link header of {}', shapeTreeResource.getUri(), LinkRelations.SHAPETREE);
       throw new ShapeTreeException(500, 'No Link header with relation of ' + LinkRelations.SHAPETREE + ' found');
     }
     const metaDataURIStringHeaders: string[] | undefined = linkHeaders.get(LinkRelations.SHAPETREE);
-    let metaDataURIString: string | null = metaDataURIStringHeaders === undefined ? null : metaDataURIStringHeaders[0];
-    if (metaDataURIString !== null && metaDataURIString.startsWith('/')) {
-      // If the header value doesn't include scheme/host, prefix it with the scheme & host from container
-      const shapeTreeContainerURI: URL = shapeTreeResource.getUri();
-      let portFragment: string;
-      if (shapeTreeContainerURI.port !== '') {
-        portFragment = ':' + shapeTreeContainerURI.port;
-      } else {
-        portFragment = '';
-      }
-      metaDataURIString = shapeTreeContainerURI.protocol + '://' + shapeTreeContainerURI.host + portFragment + metaDataURIString;
-    }
-
+    const metaDataURIString: string | null = metaDataURIStringHeaders === undefined ? null : metaDataURIStringHeaders[0];
     if (metaDataURIString == null) {
       throw new ShapeTreeException(500, 'No Link header with relation of ' + LinkRelations.SHAPETREE + ' found');
     }
-
-    return new URL(metaDataURIString);
+    return new URL(metaDataURIString, shapeTreeResource.getUri());
   }
 
   /**
@@ -360,7 +348,7 @@ export abstract class AbstractValidatingMethodHandler {
    * @throws IOException IOException
    * @throws URISyntaxException URISyntaxException
    */
-  protected async validateAgainstParentContainer(shapeTreeContext: ShapeTreeContext, graphToValidate: Store, baseURI: URL, parentContainer: ShapeTreeResource, resourceName: string, shapeTreeRequest: ShapeTreeRequest<any>): Promise<ValidationContext | null> /* throws IOException, URISyntaxException */ {
+  protected async validateAgainstParentContainer(shapeTreeContext: ShapeTreeContext, graphToValidate: Store | null, baseURI: URL, parentContainer: ShapeTreeResource, resourceName: string, shapeTreeRequest: ShapeTreeRequest<any>): Promise<ValidationContext | null> /* throws IOException, URISyntaxException */ {
     const parentContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, parentContainer);
     // If there is no metadata for the parent container, it is not managed
     if (!parentContainerMetadataResource.isExists()) return null;
@@ -412,7 +400,7 @@ export abstract class AbstractValidatingMethodHandler {
   protected plantShapeTree(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, body     : string, contentType  : string, rootShapeTree: ShapeTree       , rootContainer  : string,       shapeTree: ShapeTree, requestedName: string): ShapeTreePlantResult /* throws IOException, URISyntaxException * /
   */
 
-  protected plantShapeTreeStore(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, bodyGraph: Store, rootShapeTree: ShapeTree, rootContainer: string | null, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
+  protected plantShapeTreeStore(shapeTreeContext: ShapeTreeContext, parentContainer: ShapeTreeResource, bodyGraph: Store | null, rootShapeTree: ShapeTree, rootContainer: string | null, shapeTree: ShapeTree, requestedName: string | null): Promise<ShapeTreePlantResult> /* throws IOException, URISyntaxException */ {
     return this.plantShapeTree(shapeTreeContext, parentContainer, GraphHelper.writeGraphToTurtleString(bodyGraph) || '', AbstractValidatingMethodHandler.TEXT_TURTLE, rootShapeTree, rootContainer, shapeTree, requestedName);
   }
 

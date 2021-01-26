@@ -4,10 +4,47 @@ import { ShapeTreeContext } from '@models/ShapeTreeContext';
 import { FetchShapeTreeClient } from '../src/client/fetch/FetchShapeTreeClient';
 import fetch from 'node-fetch';
 import { URL } from 'url';
+import { HttpHeaders } from '@core/enums';
+import MockRuleBuilder from 'mockttp/dist/rules/mock-rule-builder';
+// import {
+//   Method,
+// } from "mockttp/src/types";
+import { load as parseYaml } from 'js-yaml';
+import { readFileSync } from 'fs';
+import * as Path from 'path';
+
+export enum Method { // @@ fix import { Method } above and delete this enum
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  PATCH,
+  HEAD,
+  OPTIONS
+}
+
+type MapObject = { [key: string]: string };
+
+interface Fixture {
+  statusCode: number,
+  delay: number,
+  headers: string[],
+  body: string
+}
+
+class DispatcherEntry {
+  constructor(
+    public fixtureNames: string[],
+    public expectedMethod: Method,
+    public expectedPath: string,
+    public expectedHeaders: Map<string, string[]> | null,
+  ) { }
+}
+
 
 const superagent = require('superagent');
 require('superagent-proxy')(superagent);
-const mockServer = require('mockttp').getLocal();
+const mockServer = require('mockttp').getLocal({ debug: true });
 
 describe('GitHubDeepTests', () => {
   const shapeTreeClient = new FetchShapeTreeClient();
@@ -20,14 +57,13 @@ describe('GitHubDeepTests', () => {
   afterEach(() => mockServer.stop());
   before(() => console.log(`    * tests run at ${new Date()}`));
 
-  it('lets you proxy requests made to any other hosts', async () => {
+  it('test test infrastructure', async () => {
     const u1 = 'http://example.com/some/path';
     const b1 = `document at ${u1}`;
     await mockServer.get(u1).thenReply(200, b1);
     let response = await superagent.get(u1).proxy(mockServer.url);
     expect(response.text).to.equal(b1);
 
-    const u2 = data;
     const b2 = `document at ${data}`;
     await mockServer.get(data).thenReply(200, b2, {
       'Content-type': 'text/plain',
@@ -36,8 +72,8 @@ describe('GitHubDeepTests', () => {
         'id=123 expires=Sat, 15-Jul-2017 23:58:22 GMT; path=/; domain=x.com; httponly'
       ]
     });
-    const resp = await fetch(mockServer.urlFor(data))
-    expect(await resp.text()).to.equal(b2)
+    const resp = await fetch(mockServer.urlFor(data));
+    expect(await resp.text()).to.equal(b2);
     // response = await superagent.get(mockServer.urlFor(u2)).proxy(mockServer.url);
     // expect(response.text).to.equal(b2);
   });
@@ -45,23 +81,25 @@ describe('GitHubDeepTests', () => {
   describe('plant test', () => { // the tests container
     it('plantGitRootCreatesStatics', async () => { // the single test
       const u = new URL(mockServer.urlFor(data));
-      const creates = new URL('created', u);
-      await Promise.all([
-        mockServer.post(u).thenReply(200, 'asdf', {
-          'Location': creates.href,
-          'Content-type': 'text/plain'
-        }),
-        mockServer.get(u).thenReply(200, 'asdf', {
-          'Location': creates.href,
-          'Content-type': 'text/plain',
-        })
-      ]);
+      // const creates = new URL('created', u);
+      // await Promise.all([
+      //   mockServer.post(u).thenReply(200, 'asdf', {
+      //     'Location': creates.href,
+      //     'Content-type': 'text/plain'
+      //   }),
+      //   mockServer.get(u).thenReply(200, 'asdf', {
+      //     'Location': creates.href,
+      //     'Content-type': 'text/plain',
+      //   })
+      // ]);
+      await prepareServer(mockServer, PlantDispatchEntries);
       const newUrl: URL = await shapeTreeClient.plantShapeTree(
         context,
         u,
         mockServer.urlFor('/static/shapetrees/github-deep/shapetree#root'),
         null, null, 'Git', null, TEXT_TURTLE,
       );
+      expect(newUrl.href).to.equal(mockServer.urlFor('/ldp/data/Git/'));
       // const str = new ShapeTreeResponse('foo');
       // expect(str.name).to.equal('foo');
       // expect(X).to.be.false
@@ -70,3 +108,74 @@ describe('GitHubDeepTests', () => {
     });
   });
 });
+
+const PlantDispatchEntries: DispatcherEntry[] = [
+  new DispatcherEntry(['fixtures/shapetrees/github-deep-shapetree-ttl'], Method.GET, '/static/shapetrees/github-deep/shapetree', null),
+  new DispatcherEntry(['fixtures/schemas/github-shex'], Method.GET, '/static/shex/github/shex', null),
+  new DispatcherEntry(['fixtures/githubDeep/data-container'], Method.GET, '/ldp/data/', null),
+  new DispatcherEntry(['fixtures/errors/404'], Method.GET, '/ldp/data/?ext=shapetree', null),
+  new DispatcherEntry(['fixtures/errors/404'], Method.GET, '/ldp/data/Git', null),
+  new DispatcherEntry(['fixtures/githubDeep/git-container'], Method.GET, '/ldp/data/Git/', null),
+  new DispatcherEntry(['fixtures/errors/404', 'githubDeep/git-container-metadata'], Method.GET, '/ldp/data/Git/?ext=shapetree', null),
+  new DispatcherEntry(['fixtures/githubDeep/create-git-container-response'], Method.POST, '/ldp/data/', new Map([[HttpHeaders.SLUG, ['Git']]])),
+  new DispatcherEntry(['fixtures/githubDeep/git-metadata-update-response'], Method.PUT, '/ldp/data/Git/?ext=shapetree', null),
+
+  new DispatcherEntry(['fixtures/errors/404'], Method.GET, '/ldp/data/Git/users', null),
+  new DispatcherEntry(['fixtures/githubDeep/create-git_users-container-response'], Method.POST, '/ldp/data/Git/', new Map([[HttpHeaders.SLUG, ['users']]])),
+  new DispatcherEntry(['fixtures/githubDeep/git-users-container'], Method.GET, '/ldp/data/Git/users/', null),
+  new DispatcherEntry(['fixtures/githubDeep/git-users-metadata-update-response'], Method.PUT, '/ldp/data/Git/users/?ext=shapetree', null),
+  new DispatcherEntry(['fixtures/errors/404', 'githubDeep/git-users-container-metadata'], Method.GET, '/ldp/data/Git/users/?ext=shapetree', null),
+
+  new DispatcherEntry(['fixtures/errors/404'], Method.GET, '/ldp/data/Git/repos', null),
+  new DispatcherEntry(['fixtures/githubDeep/create-git_repos-container-response'], Method.POST, '/ldp/data/Git/', new Map([[HttpHeaders.SLUG, ['repos']]])),
+  new DispatcherEntry(['fixtures/githubDeep/git-repos-container'], Method.GET, '/ldp/data/Git/repos/', null),
+  new DispatcherEntry(['fixtures/githubDeep/git-repos-metadata-update-response'], Method.PUT, '/ldp/data/Git/repos/?ext=shapetree', null),
+  new DispatcherEntry(['fixtures/errors/404', 'githubDeep/git-repos-container-metadata'], Method.GET, '/ldp/data/Git/repos/?ext=shapetree', null),
+
+  new DispatcherEntry(['fixtures/githubDeep/git-repos-jd-create-response'], Method.PUT, '/ldp/data/Git/repos/janeirodigtal/', null),
+  new DispatcherEntry(['fixtures/errors/404'], Method.GET, '/ldp/data/Git/repos/janeirodigital', null),
+  new DispatcherEntry(['fixtures/githubDeep/create-git_repos_jd-container-response'], Method.POST, '/ldp/data/Git/repos/', new Map([[HttpHeaders.SLUG, ['janeirodigital']]])),
+  new DispatcherEntry(['fixtures/githubDeep/git-repos-jd-container'], Method.GET, '/ldp/data/Git/repos/janeirodigital/', null),
+  new DispatcherEntry(['fixtures/githubDeep/git-repos-jd-metadata-update-response'], Method.PUT, '/ldp/data/Git/repos/janeirodigital/?ext=shapetree', null),
+  new DispatcherEntry(['fixtures/errors/404', 'githubDeep/git-repos-janeirodigital-container-metadata'], Method.GET, '/ldp/data/Git/repos/janeirodigital/?ext=shapetree', null)
+
+]
+
+function prepareServer(mockServer: any, dispatchers: DispatcherEntry[]): Promise<any> {
+  return Promise.all(dispatchers.map(
+    (d) => {
+      // new Promise((resolve, reject) => {
+      //   try {
+      //     resolve(yaml.safeLoad(string, options))
+      //   } catch (err) {
+      //     reject(err)
+      //   }
+      // })
+      const baseUrl = mockServer.urlFor('/').slice(0, -1);
+      let fixtureText = readFileSync(Path.join(__dirname, d.fixtureNames[0] + '.yaml'), 'utf8');
+      fixtureText = fixtureText.replace(/\$\{SERVER_BASE\}/g, baseUrl);
+      const fixture = <Fixture>parseYaml(fixtureText);
+      // fixture.body = fixture.body.replace(/\$\{SERVER_BASE\}/g, baseUrl);
+      const u = new URL(mockServer.urlFor(d.expectedPath));
+      const query = u.search;
+      u.search = '';
+      const rule: MockRuleBuilder = new MockRuleBuilder(d.expectedMethod, u.href, mockServer.addRule)
+      if (query !== '')
+        rule.withQuery(query.substr(1).split(/[&;]/).reduce((acc: MapObject, pair) => {
+          const [attr, value] = pair.split(/=/).map(decodeURIComponent);
+          acc[attr] = value;
+          return acc;
+        }, {}));
+      const headers: MapObject = {};
+      if (d.expectedHeaders)
+        for (const e of d.expectedHeaders?.entries())
+          headers[e[0]] = e[1].join(',');
+      return rule.thenReply(fixture.statusCode, fixture.body, fixture.headers.reduce((acc: MapObject, h) => {
+        const idx = h.indexOf(':');
+        acc[h.substr(0, idx)] = h.substr(idx + 1);
+        return acc;
+      }, {}));
+      // return mockServer.post(u).thenReply(200, 'asdf', d.expectedHeaders)
+    }
+  ));
+}

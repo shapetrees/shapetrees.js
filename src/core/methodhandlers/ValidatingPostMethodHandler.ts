@@ -38,8 +38,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, uuid().toString());
       const incomingRequestShapeTreeUris: string[] = this.getIncomingLinkHeaderByRelationValue(shapeTreeRequest, LinkRelations.SHAPETREE);
       const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), requestedName, shapeTreeRequest.getResourceType());
-      const incomingRequestBodyGraph: Store = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI) ||
-        (() => { throw new ShapeTreeException(422, "Failed to load graph for " + normalizedBaseURI) })();
+      const incomingRequestBodyGraph: Store | null = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
 
       if (incomingRequestShapeTreeUris !== null && incomingRequestShapeTreeUris.length !== 0) {
         // This means we're Planting a new Shape Tree
@@ -79,8 +78,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
         // Create and return a response
         return ValidatingPostMethodHandler.createPlantResponse(plantResults, shapeTreeRequest);
       } else {
-        const validationContext: ValidationContext = await this.validateAgainstParentContainer(shapeTreeContext, incomingRequestBodyGraph, normalizedBaseURI, existingResource, requestedName, shapeTreeRequest) ||
-          (() => { throw new ShapeTreeException(422, "Unable to validate payload against " + existingResource) })();
+        const validationContext: ValidationContext | null = await this.validateAgainstParentContainer(shapeTreeContext, incomingRequestBodyGraph, normalizedBaseURI, existingResource, requestedName, shapeTreeRequest);
         // Two reasons for passing through the request (and not performing validation):
         // 1. Validation returns no locators, meaning the parent container is not managed
         // 2. We're creating a resource and it has already passed validation
@@ -115,7 +113,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
     return new ShapeTreeValidationResponse(); // @@ tsc thought not all paths returned
   }
 
-  private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store, baseURI: URL, shapeTreesToPlant: ShapeTree[]): Promise<void> /* throws IOException, URISyntaxException */ {
+  private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store | null, baseURI: URL, shapeTreesToPlant: ShapeTree[]): Promise<void> /* throws IOException, URISyntaxException */ {
     const validatingShapeTree: ShapeTree = this.getShapeTreeWithShapeURI(shapeTreesToPlant) ||
       (() => { throw new ShapeTreeException(422, "Failed to plant shape trees " + shapeTreesToPlant.map(st => st.getId()).join('\n,')) })();
 
