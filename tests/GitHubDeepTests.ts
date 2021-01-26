@@ -42,9 +42,7 @@ class DispatcherEntry {
 }
 
 
-const superagent = require('superagent');
-require('superagent-proxy')(superagent);
-const mockServer = require('mockttp').getLocal({ debug: true });
+const mockServer = require('mockttp').getLocal({ debug: false });
 
 describe('GitHubDeepTests', () => {
   const shapeTreeClient = new FetchShapeTreeClient();
@@ -58,12 +56,6 @@ describe('GitHubDeepTests', () => {
   before(() => console.log(`    * tests run at ${new Date()}`));
 
   it('test test infrastructure', async () => {
-    const u1 = 'http://example.com/some/path';
-    const b1 = `document at ${u1}`;
-    await mockServer.get(u1).thenReply(200, b1);
-    let response = await superagent.get(u1).proxy(mockServer.url);
-    expect(response.text).to.equal(b1);
-
     const b2 = `document at ${data}`;
     await mockServer.get(data).thenReply(200, b2, {
       'Content-type': 'text/plain',
@@ -74,24 +66,11 @@ describe('GitHubDeepTests', () => {
     });
     const resp = await fetch(mockServer.urlFor(data));
     expect(await resp.text()).to.equal(b2);
-    // response = await superagent.get(mockServer.urlFor(u2)).proxy(mockServer.url);
-    // expect(response.text).to.equal(b2);
   });
 
   describe('plant test', () => { // the tests container
     it('plantGitRootCreatesStatics', async () => { // the single test
       const u = new URL(mockServer.urlFor(data));
-      // const creates = new URL('created', u);
-      // await Promise.all([
-      //   mockServer.post(u).thenReply(200, 'asdf', {
-      //     'Location': creates.href,
-      //     'Content-type': 'text/plain'
-      //   }),
-      //   mockServer.get(u).thenReply(200, 'asdf', {
-      //     'Location': creates.href,
-      //     'Content-type': 'text/plain',
-      //   })
-      // ]);
       await prepareServer(mockServer, PlantDispatchEntries);
       const newUrl: URL = await shapeTreeClient.plantShapeTree(
         context,
@@ -100,11 +79,7 @@ describe('GitHubDeepTests', () => {
         null, null, 'Git', null, TEXT_TURTLE,
       );
       expect(newUrl.href).to.equal(mockServer.urlFor('/ldp/data/Git/'));
-      // const str = new ShapeTreeResponse('foo');
-      // expect(str.name).to.equal('foo');
-      // expect(X).to.be.false
-      // expect(X).to.be.empty;
-      // expect(X).to.be.an('object').to.have.property('p1').to.equal('v1');
+      // reminders: .to.equal('foo'), .to.be.false, .to.be.empty, .to.be.an('object').to.have.property('p1').to.equal('v1');
     });
   });
 });
@@ -169,13 +144,12 @@ function prepareServer(mockServer: any, dispatchers: DispatcherEntry[]): Promise
       const headers: MapObject = {};
       if (d.expectedHeaders)
         for (const e of d.expectedHeaders?.entries())
-          headers[e[0]] = e[1].join(',');
+          headers[e[0]] = e[1]/*.map(v => v.replace(/\$\{SERVER_BASE\}/g, baseUrl))*/.join(',');
       return rule.thenReply(fixture.statusCode, fixture.body, fixture.headers.reduce((acc: MapObject, h) => {
         const idx = h.indexOf(':');
         acc[h.substr(0, idx)] = h.substr(idx + 1);
         return acc;
       }, {}));
-      // return mockServer.post(u).thenReply(200, 'asdf', d.expectedHeaders)
     }
   ));
 }
