@@ -1,4 +1,6 @@
 import log from 'loglevel';
+import { URL } from "url";
+import { Store } from "n3";
 import { v4 as uuid } from 'uuid';
 import { HttpHeaders, LinkRelations, ShapeTreeResourceType } from "@core/enums";
 import { ShapeTreeException } from "@core/exceptions";
@@ -12,8 +14,6 @@ import { ShapeTreeFactory } from "@core/ShapeTreeFactory";
 import { ShapeTreeRequest } from "@core/ShapeTreeRequest";
 import { ShapeTreeResource } from "@core/ShapeTreeResource";
 import { ShapeTreeValidationResponse } from "@core/ShapeTreeValidationResponse";
-import { Store } from "n3";
-import { URL } from "url";
 import { AbstractValidatingMethodHandler } from "./AbstractValidatingMethodHandler";
 import { ValidatingMethodHandler } from "./ValidatingMethodHandler";
 import { ValidationResult } from '@core/models/ValidationResult';

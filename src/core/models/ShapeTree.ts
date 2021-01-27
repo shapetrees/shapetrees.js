@@ -107,7 +107,7 @@ export class ShapeTree {
     return new ValidationResult(valid);
   }
 
-  public async findMatchingContainsShapeTree(requestedName: string, targetShapeTreeHint: URL, resourceType: ShapeTreeResourceType): Promise<ShapeTree | null> /* throws URISyntaxException, ShapeTreeException */ {
+  public async findMatchingContainsShapeTree(requestedName: string, targetShapeTreeHint: URL | null, resourceType: ShapeTreeResourceType): Promise<ShapeTree | null> /* throws URISyntaxException, ShapeTreeException */ {
     if (/* @@ delme this.contains === null || */ this.contains.length === 0) {
       if (this.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_RESOURCE) {
         return this;
@@ -122,7 +122,7 @@ export class ShapeTree {
       }
 
       // Allow a target shape tree hint to be passed into matching to skip URITemplate matching
-      if (targetShapeTreeHint != null) {
+      if (targetShapeTreeHint !== null) {
         if (this.contains.indexOf(targetShapeTreeHint) !== -1) {
           return childShapeTree;
         }

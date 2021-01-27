@@ -117,9 +117,9 @@ export abstract class AbstractValidatingMethodHandler {
    * @return BaseURI to use for RDF Graphs
    * @throws URISyntaxException URISyntaxException
    */
-  protected normalizeBaseURI(uri: URL, requestedName: string, resourceType: ShapeTreeResourceType): URL /* throws URISyntaxException */ {
+  protected normalizeBaseURI(uri: URL, requestedName: string | null, resourceType: ShapeTreeResourceType): URL /* throws URISyntaxException */ {
     let uriString: string = uri.href;
-    if (requestedName != null) {
+    if (requestedName !== null) {
       uriString += requestedName;
     }
     if (resourceType === ShapeTreeResourceType.CONTAINER && !uriString.endsWith('/')) {
