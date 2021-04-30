@@ -3,7 +3,9 @@ import { ShapeTreeException } from '@core/exceptions';
 import { ShapeTreeContext } from '@core/models/ShapeTreeContext';
 import { ResourceAccessor } from '@core/ResourceAccessor';
 import { ShapeTreeResource } from '@core/ShapeTreeResource';
-import { FetchClient, RequestBody, RequestBuilder, MediaType, Response } from '@todo/FetchHttpClient';
+import {
+  FetchClient, MediaType, RequestBody, RequestBuilder, Response,
+} from '@todo/FetchHttpClient';
 import log from 'loglevel';
 import { URL } from 'url';
 import { FetchHelper } from './FetchHelper';
@@ -20,18 +22,18 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
       const remoteResource: RemoteResource = new RemoteResource(resourceURI, context.getAuthorizationHeaderValue());
       await remoteResource.ready;
       return this.mapRemoteResourceToShapeTreeResource(remoteResource);
-    } catch (ex/*: Exception*/) {
+    } catch (ex/*: Exception */) {
       throw new ShapeTreeException(500, ex.message);
     }
   }
 
   // @Override
   public async createResource(context: ShapeTreeContext, resourceURI: URL, headers: Map<string, string[]>, body: string, contentType: string): Promise<ShapeTreeResource> /* throws ShapeTreeException */ {
-    log.debug("createResource: URI [{}], headers [{}]", resourceURI, this.writeHeaders(headers));
-
+    log.debug('createResource: URI [{}], headers [{}]', resourceURI, this.writeHeaders(headers));
     try {
       if (body == null) {
-        body = "";
+        // eslint-disable-next-line no-param-reassign
+        body = '';
       }
 
       const httpClient: FetchClient = ShapeTreeHttpClientHolder.getForConfig(new ShapeTreeClientConfiguration(false, false));
@@ -54,7 +56,7 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
 
   // @Override
   public async updateResource(context: ShapeTreeContext, updatedResource: ShapeTreeResource): Promise<ShapeTreeResource> /* throws ShapeTreeException */ {
-    log.debug("updateResource: URI [{}]", updatedResource.getUri());
+    log.debug('updateResource: URI [{}]', updatedResource.getUri());
 
     try {
       const contentType: string | null = updatedResource.getFirstAttributeValue(HttpHeaders.CONTENT_TYPE);
@@ -72,12 +74,12 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
 
       const response: Response = await httpClient.newCall(updateResourcePutBuilder.build()).execute();
       if (!response.isSuccessful()) {
-        log.error("Error updating resource {}, Status {} Message {}", updatedResource, response.code(), response.message());
+        log.error('Error updating resource {}, Status {} Message {}', updatedResource, response.code(), response.message());
       }
 
       // Re-pull the resource after the update
       return this.getResource(context, updatedResource.getUri());
-    } catch (ex/*: IOException*/) {
+    } catch (ex/*: IOException */) {
       throw new ShapeTreeException(500, ex.message);
     }
 
@@ -85,11 +87,12 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
 
   private writeHeaders(headers: Map<string, string[]>): string {
     let sb = '';
+    // eslint-disable-next-line guard-for-in
     for (const entry in headers.entries) {
       const [key, values] = entry;
       for (const value of values) {
         if (sb.length !== 0) {
-          sb += ",";
+          sb += ',';
         }
         sb += key + '=' + value;
       }
@@ -103,14 +106,14 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
     try {
       shapeTreeResource.setUri(remoteResource.getUri());
     } catch (ex/*: IOException */) {
-      throw new ShapeTreeException(500, "Error resolving URI");
+      throw new ShapeTreeException(500, 'Error resolving URI');
     }
 
     shapeTreeResource.setExists(remoteResource.exists());
     shapeTreeResource.setContainer(remoteResource.isContainer());
     try {
       shapeTreeResource.setBody(remoteResource.getBody());
-    } catch (iex/*: IOException*/) {
+    } catch (iex/*: IOException */) {
       shapeTreeResource.setBody(null);
     }
     shapeTreeResource.setAttributes(remoteResource.getResponseHeaders());

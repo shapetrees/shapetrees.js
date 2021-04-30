@@ -1,6 +1,8 @@
 export class ModelFactoryBase {
+  /*
   public constructor() {
   }
+  */
 
   /*
   protected static gp(name: string, ifAbsent: string | null = null): string {

@@ -8,7 +8,7 @@ export class ShapeTreeLocator {
   constructor(
     private rootShapeTree: string,
     private shapeTree: string,
-    private shapeTreeRoot: string
+    private shapeTreeRoot: string,
   ) { }
 
   getRootShapeTree(): string { return this.rootShapeTree; }
@@ -22,14 +22,14 @@ export class ShapeTreeLocator {
     const locators: ShapeTreeLocator[] = new Array();
 
     const hasShapeTreeLocatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null);
-    for (let hasShapeTreeLocatorTriple of hasShapeTreeLocatorTriples) {
+    for (const hasShapeTreeLocatorTriple of hasShapeTreeLocatorTriples) {
       const locatorURI: string = hasShapeTreeLocatorTriple.object.value;
 
       const locatorTriples: Triple[] = shapeTreeMetadataGraph.getQuads(DataFactory.namedNode(locatorURI), null, null, null);
       let shapeTreeRoot: string | null = null;
       let rootShapeTree: string | null = null;
       let shapeTree: string | null = null;
-      for (let locatorTriple of locatorTriples) {
+      for (const locatorTriple of locatorTriples) {
         switch (locatorTriple.predicate.value) {
           case ShapeTreeVocabulary.HAS_SHAPE_TREE:
             shapeTree = locatorTriple.object.value;
@@ -41,7 +41,7 @@ export class ShapeTreeLocator {
             rootShapeTree = locatorTriple.object.value;
             break;
           default:
-            throw new IllegalStateException("Unexpected value: " + locatorTriple.predicate.value);
+            throw new IllegalStateException('Unexpected value: ' + locatorTriple.predicate.value);
         }
       }
       if (rootShapeTree === null || shapeTree === null || shapeTreeRoot === null) {

@@ -1,16 +1,16 @@
-import { ShapeTreeResourceType } from "@core/enums";
-import { ShapeTreeException } from "@core/exceptions";
-import { ShapeTreeContext } from "@core/models/ShapeTreeContext";
-import { ShapeTreePlantResult } from "@core/models/ShapeTreePlantResult";
-import { ValidationContext } from "@core/models/ValidationContext";
-import { ResourceAccessor } from "@core/ResourceAccessor";
-import { ShapeTreeRequest } from "@core/ShapeTreeRequest";
-import { ShapeTreeResource } from "@core/ShapeTreeResource";
-import { ShapeTreeValidationResponse } from "@core/ShapeTreeValidationResponse";
-import { Store } from "n3";
-import { URL } from "url";
-import { AbstractValidatingMethodHandler } from "./AbstractValidatingMethodHandler";
-import { ValidatingMethodHandler } from "./ValidatingMethodHandler";
+import { ShapeTreeResourceType } from '@core/enums';
+import { ShapeTreeException } from '@core/exceptions';
+import { ShapeTreeContext } from '@core/models/ShapeTreeContext';
+import { ShapeTreePlantResult } from '@core/models/ShapeTreePlantResult';
+import { ValidationContext } from '@core/models/ValidationContext';
+import { ResourceAccessor } from '@core/ResourceAccessor';
+import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
+import { ShapeTreeResource } from '@core/ShapeTreeResource';
+import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
+import { Store } from 'n3';
+import { URL } from 'url';
+import { AbstractValidatingMethodHandler } from './AbstractValidatingMethodHandler';
+import { ValidatingMethodHandler } from './ValidatingMethodHandler';
 
 export class ValidatingPutMethodHandler extends AbstractValidatingMethodHandler implements ValidatingMethodHandler {
 
@@ -42,11 +42,11 @@ export class ValidatingPutMethodHandler extends AbstractValidatingMethodHandler 
       const results: ShapeTreePlantResult[] = new Array();
       for (const locator of validationContext.getParentContainerLocators()) {
 
-        if (requestedName.endsWith("/")) {
-          requestedName = requestedName.replace("/", "");
+        if (requestedName.endsWith('/')) {
+          requestedName = requestedName.replace('/', '');
         }
-        const result: ShapeTreePlantResult = await this.plantShapeTreeLocator(shapeTreeContext, parentContainerResource, shapeTreeRequest.getBody() || '' /* @@ */, shapeTreeRequest.getContentType() || 'text/turtle' /* @@ */, locator, validationContext.getValidatingShapeTree()!!  /* @@ */, requestedName) ||
-          (() => { throw new ShapeTreeException(422, "Unable to PUT ShapeTree " + locator.getShapeTree()) })();
+        const result: ShapeTreePlantResult = await this.plantShapeTreeLocator(shapeTreeContext, parentContainerResource, shapeTreeRequest.getBody() || '' /* @@ */, shapeTreeRequest.getContentType() || 'text/turtle' /* @@ */, locator, validationContext.getValidatingShapeTree()!! /* @@ */, requestedName) ||
+          (() => { throw new ShapeTreeException(422, 'Unable to PUT ShapeTree ' + locator.getShapeTree()); })();
         results.push(result);
       }
 

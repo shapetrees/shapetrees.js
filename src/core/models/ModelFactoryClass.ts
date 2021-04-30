@@ -1,4 +1,4 @@
-import { ModelFactoryBase } from "./ModelFactoryBase";
+import { ModelFactoryBase } from './ModelFactoryBase';
 
 export class ModelFactory extends ModelFactoryBase {
   private ModelFactory() {

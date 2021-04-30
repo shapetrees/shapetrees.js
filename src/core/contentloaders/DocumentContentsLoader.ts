@@ -1,5 +1,5 @@
-import { DocumentContents } from "@core/models/DocumentContents";
-import { URL } from "url";
+import { DocumentContents } from '@core/models/DocumentContents';
+import { URL } from 'url';
 
 /**
  * Interface defining how a remote document can be loaded and its contents extracted.

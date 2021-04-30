@@ -1,11 +1,9 @@
 import log from 'loglevel';
-import { URL } from "url";
-import { DataFactory, Store } from "n3";
-import { ResourceAccessor } from "@core/ResourceAccessor";
-import { ShapeTreeRequest } from "@core/ShapeTreeRequest";
-import { ShapeTreeValidationResponse } from "@core/ShapeTreeValidationResponse";
-import { AbstractValidatingMethodHandler } from "./AbstractValidatingMethodHandler";
-import { ValidatingMethodHandler } from "./ValidatingMethodHandler";
+import { URL } from 'url';
+import { DataFactory, Store } from 'n3';
+import { ResourceAccessor } from '@core/ResourceAccessor';
+import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
+import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
 import { ShapeTreeException } from '@core/exceptions';
 import { ShapeTreeContext } from '@core/models/ShapeTreeContext';
 import { ShapeTreeResource } from '@core/ShapeTreeResource';
@@ -14,6 +12,8 @@ import { ShapeTreeLocator } from '@core/models/ShapeTreeLocator';
 import { ShapeTree } from '@core/models/ShapeTree';
 import { ShapeTreeFactory } from '@core/ShapeTreeFactory';
 import { ValidationResult } from '@core/models/ValidationResult';
+import { AbstractValidatingMethodHandler } from './AbstractValidatingMethodHandler';
+import { ValidatingMethodHandler } from './ValidatingMethodHandler';
 
 // @Slf4j
 export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandler implements ValidatingMethodHandler {
@@ -25,9 +25,9 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
   // @Override
   public async validateRequest(shapeTreeRequest: ShapeTreeRequest<any>): Promise<ShapeTreeValidationResponse> {
     try {
-      if (shapeTreeRequest.getContentType() === null || shapeTreeRequest.getContentType()!!.toLowerCase() !== "application/sparql-update".toLowerCase()) {
-        log.error("Received a patch without a content type of application/sparql-update");
-        throw new ShapeTreeException(415, "PATCH verb expects a content type of application/sparql-update");
+      if (shapeTreeRequest.getContentType() === null || shapeTreeRequest.getContentType()!!.toLowerCase() !== 'application/sparql-update'.toLowerCase()) {
+        log.error('Received a patch without a content type of application/sparql-update');
+        throw new ShapeTreeException(415, 'PATCH verb expects a content type of application/sparql-update');
       }
 
       const shapeTreeContext: ShapeTreeContext = this.buildContextFromRequest(shapeTreeRequest);
@@ -55,11 +55,11 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
         const shapeTrees: ShapeTree[] = new Array();
         for (const locator of shapeTreeLocatorMetadatas) {
           shapeTrees.push(await ShapeTreeFactory.getShapeTree(new URL(locator.getShapeTree())) ||
-            (() => { throw new ShapeTreeException(422, "Failed to load shape tree " + locator.getShapeTree()) })());
+            (() => { throw new ShapeTreeException(422, 'Failed to load shape tree ' + locator.getShapeTree()); })());
         }
 
         const validatingShapeTree: ShapeTree = this.getShapeTreeWithContents(shapeTrees) ||
-          (() => { throw new ShapeTreeException(422, 'Expected contains predicate in ' + shapeTrees.map(st => st.getId())) })();
+          (() => { throw new ShapeTreeException(422, 'Expected contains predicate in ' + shapeTrees.map((st) => st.getId())); })();
 
         /* This is the ShapeTree that the container being created must adhere to
            it is identified by traversing the ShapeTrees contained within containerShapeTree
@@ -75,7 +75,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
           // Get existing resource graph (prior to PATCH)
           let existingResourceGraph: Store | null = this.getGraphForResource(existingResource, normalizedBaseURI);
           if (existingResourceGraph == null) {
-            log.debug("Existing graph to patch does not exist.  Creating an empty graph.");
+            log.debug('Existing graph to patch does not exist.  Creating an empty graph.');
             existingResourceGraph = new Store();
           }
 
@@ -85,7 +85,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
           // UpdateAction.execute(updateRequest, existingResourceGraph);
 
           if (existingResourceGraph == null) {
-            throw new ShapeTreeException(400, "No graph after update");
+            throw new ShapeTreeException(400, 'No graph after update');
           }
 
           const focusNodeURI: URL = this.getIncomingResolvedFocusNode(shapeTreeRequest, normalizedBaseURI);
@@ -96,7 +96,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
           return ShapeTreeValidationResponse.passThroughResponse();
         } else {
           // Otherwise, return a validation error
-          throw new ShapeTreeException(422, "Payload did not meet requirements defined by ShapeTree " + targetShapeTree.getURI());
+          throw new ShapeTreeException(422, 'Payload did not meet requirements defined by ShapeTree ' + targetShapeTree.getURI());
         }
       } else {
         // If the parent container is not managed, then pass through the PATCH

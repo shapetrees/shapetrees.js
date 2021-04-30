@@ -1,7 +1,9 @@
 import { HttpHeaders } from '@core/enums';
 import { ShapeTreeException } from '@core/exceptions';
 import { DocumentContents } from '@core/models/DocumentContents';
-import { FetchHttpClient, FollowRedirects, HttpClient, HttpRequest, Request, Response, HttpRequestMethod } from '@todo/FetchHttpClient';
+import {
+  FetchHttpClient, FollowRedirects, HttpClient, HttpRequest, HttpRequestMethod, Request, Response,
+} from '@todo/FetchHttpClient';
 import { URL } from 'url';
 import { DocumentContentsLoader } from './DocumentContentsLoader';
 

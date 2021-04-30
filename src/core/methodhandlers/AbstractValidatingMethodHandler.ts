@@ -141,7 +141,7 @@ export abstract class AbstractValidatingMethodHandler {
     if (shapeTreeRequest.getResourceType() !== ShapeTreeResourceType.NON_RDF &&
       shapeTreeRequest.getBody() !== null &&
       shapeTreeRequest.getBody()!!.length > 0) {
-      return GraphHelper.readStringIntoGraph(baseURI, shapeTreeRequest.getBody() || '', shapeTreeRequest.getContentType() || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ default not in java code*/);
+      return GraphHelper.readStringIntoGraph(baseURI, shapeTreeRequest.getBody() || '', shapeTreeRequest.getContentType() || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ default not in java code */);
     }
     return null;
   }
@@ -208,7 +208,7 @@ export abstract class AbstractValidatingMethodHandler {
       const shapeTrees: string[] | undefined = linkHeaders.get(LinkRelations.SHAPETREE);
       if (shapeTrees && shapeTrees.length === 1) {
         const primaryShapeTreeURI: string = shapeTrees[0];
-        for (let plantResult of plantResults) {
+        for (const plantResult of plantResults) {
           if (plantResult.getShapeTreeURI().toString() === primaryShapeTreeURI) {
             primaryPlantResult = plantResult;
             break;
@@ -216,7 +216,7 @@ export abstract class AbstractValidatingMethodHandler {
         }
       }
     } else {
-      primaryPlantResult = plantResults[0];
+      [primaryPlantResult] = plantResults;
     }
 
     const response: ShapeTreeValidationResponse = new ShapeTreeValidationResponse();
@@ -362,15 +362,15 @@ export abstract class AbstractValidatingMethodHandler {
 
     // This means the existing parent container has one or more ShapeTrees associated with it
     const existingShapeTrees: ShapeTree[] = await Promise.all(locators.map(
-      locator => <Promise<ShapeTree>>(ShapeTreeFactory.getShapeTree(new URL(locator.getShapeTree())) ||
-        (() => { throw new ShapeTreeException(422, 'Unable to locate ShapeTree ' + locator.getShapeTree()) })())
-    ))
+      (locator) => <Promise<ShapeTree>>(ShapeTreeFactory.getShapeTree(new URL(locator.getShapeTree())) ||
+        (() => { throw new ShapeTreeException(422, 'Unable to locate ShapeTree ' + locator.getShapeTree()); })()),
+    ));
 
     const shapeTreeWithContents: ShapeTree = this.getShapeTreeWithContents(existingShapeTrees) ||
-      (() => { throw new ShapeTreeException(422, 'Expected contains predicate in ' + existingShapeTrees.map(st => st.getId())) })();
+      (() => { throw new ShapeTreeException(422, 'Expected contains predicate in ' + existingShapeTrees.map((st) => st.getId())); })();
 
     const targetShapeTreeHint: URL = this.getIncomingTargetShapeTreeHint(shapeTreeRequest) ||
-      (() => { throw new ShapeTreeException(422, 'Unable to locate ShapeTree hint ' + shapeTreeRequest.getURI()) })();
+      (() => { throw new ShapeTreeException(422, 'Unable to locate ShapeTree hint ' + shapeTreeRequest.getURI()); })();
     const targetShapeTree: ShapeTree | null = await shapeTreeWithContents.findMatchingContainsShapeTree(resourceName, targetShapeTreeHint, shapeTreeRequest.getResourceType());
 
     // If no targetShapeTree is returned, it can be assumed that no validation is required
@@ -422,6 +422,7 @@ export abstract class AbstractValidatingMethodHandler {
     // In a POST scenario where the container has not yet been created, it cannot be passed into plantShapeTree
     // hierarchy of recursive method calls.  So, if it is null, set it to the URI of the planted container.
     if (rootContainer === null) {
+      // eslint-disable-next-line no-param-reassign
       rootContainer = plantedContainerResource.getUri().toString();
     }
 
@@ -429,7 +430,7 @@ export abstract class AbstractValidatingMethodHandler {
     let plantedContainerMetadataGraph: Store;
     if (plantedContainerMetadataResource.isExists()) {
       plantedContainerMetadataGraph = this.getGraphForResource(plantedContainerMetadataResource, plantedContainerResource.getUri()) ||
-        (() => { throw new ShapeTreeException(422, 'Unable to load graph ' + plantedContainerResource.getUri()) })();
+        (() => { throw new ShapeTreeException(422, 'Unable to load graph ' + plantedContainerResource.getUri()); })();
     } else {
       plantedContainerMetadataGraph = new Store(); // DataFactory.createDefaultModel().getGraph();
     }

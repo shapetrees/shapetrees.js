@@ -1,9 +1,9 @@
-import { ShapeTreeException } from "@core/exceptions";
-import { ResourceAccessor } from "@core/ResourceAccessor";
-import { ShapeTreeRequest } from "@core/ShapeTreeRequest";
-import { ShapeTreeValidationResponse } from "@core/ShapeTreeValidationResponse";
-import { AbstractValidatingMethodHandler } from "./AbstractValidatingMethodHandler";
-import { ValidatingMethodHandler } from "./ValidatingMethodHandler";
+import { ShapeTreeException } from '@core/exceptions';
+import { ResourceAccessor } from '@core/ResourceAccessor';
+import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
+import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
+import { AbstractValidatingMethodHandler } from './AbstractValidatingMethodHandler';
+import { ValidatingMethodHandler } from './ValidatingMethodHandler';
 
 export class ValidatingDeleteMethodHandler extends AbstractValidatingMethodHandler implements ValidatingMethodHandler {
 

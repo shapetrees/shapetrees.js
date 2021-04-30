@@ -1,11 +1,11 @@
-import { URL } from "url";
+import { URL } from 'url';
 
 // @Getter @AllArgsConstructor
 export class DocumentContents {
   constructor(
     private uri: URL,
     private body: string | null,
-    private contentType: string
+    private contentType: string,
   ) { }
 
   setUri(uri: URL): void { this.uri = uri; }

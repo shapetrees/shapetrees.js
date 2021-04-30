@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 // @Getter @Setter
 
 import { DocumentContentsLoader } from '@core/contentloaders/DocumentContentsLoader';
@@ -10,10 +11,10 @@ import { ShapeTreeVocabulary } from '@core/vocabularies/ShapeTreeVocabulary';
 import { SchemaCache } from '@core/SchemaCache';
 import log from 'loglevel';
 import { ShapeTreeFactory } from '@core/ShapeTreeFactory';
+import { ShapeTreeGeneratorControl, ShapeTreeGeneratorReference, ShapeTreeGeneratorResult } from '@todo/ShapeTreeGenerator';
 import { ReferencedShapeTree } from './ReferencedShapeTree';
 import { ValidationResult } from './ValidationResult';
 import { DocumentContents } from './DocumentContents';
-import { ShapeTreeGeneratorControl, ShapeTreeGeneratorReference, ShapeTreeGeneratorResult } from '@todo/ShapeTreeGenerator';
 
 // @Getter @Setter
 // @Slf4j
@@ -37,15 +38,15 @@ export class ShapeTree {
   setExpectedResourceType(expectedResourceType: string): void { this.expectedResourceType = expectedResourceType; }
 
   getValidatedByShapeUri(): string | null { return this.validatedByShapeUri; }
-  setValidatedByShapeUri(validatedByShapeUri: string | null): void { this.validatedByShapeUri = validatedByShapeUri }
+  setValidatedByShapeUri(validatedByShapeUri: string | null): void { this.validatedByShapeUri = validatedByShapeUri; }
   getLabel(): string | null { return this.label; }
-  setLabel(label: string | null): void { this.label = label }
+  setLabel(label: string | null): void { this.label = label; }
   getSupports(): string | null { return this.supports; }
-  setSupports(supports: string | null): void { this.supports = supports }
+  setSupports(supports: string | null): void { this.supports = supports; }
   getContains(): URL[] { return this.contains; }
-  setContains(contains: URL[]): void { this.contains = contains }
+  setContains(contains: URL[]): void { this.contains = contains; }
   getReferences(): ReferencedShapeTree[] { return this.references; }
-  setReferences(references: ReferencedShapeTree[]): void { this.references = references }
+  setReferences(references: ReferencedShapeTree[]): void { this.references = references; }
 
   public getURI(): URL /* throws URISyntaxException */ {
     return new URL(this.id);
@@ -95,7 +96,7 @@ export class ShapeTree {
     // Tell ShExJava we want to use Jena as our graph library
     const jenaRDF: JenaRDF = new org.apache.commons.rdf.jena.JenaRDF();
     GlobalFactory.RDFFactory = jenaRDF;
-  
+
     const validation: ValidationAlgorithm = new RecursiveValidation(schema, jenaRDF.asGraph(graph));
     const shapeLabel: Label = new Label(GlobalFactory.RDFFactory.createIRI(this.validatedByShapeUri));
     const focusNode: IRI = GlobalFactory.RDFFactory.createIRI(focusNodeURI.toString());
@@ -186,9 +187,10 @@ export class ShapeTree {
    *   add referrers stack a la: { referrers: [<#org>, <#repo>, <#issue>, <#comment>] }
    * @returns {Iterable}
    */
-  async *getReferencedShapeTrees(control = ShapeTreeGeneratorControl.DEFAULT, via: ShapeTreeGeneratorReference[] = []): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
-    const _RemoteShapeTree = this
-    yield* walkLocalTree(new URL(this.id), control, via)
+  async* getReferencedShapeTrees(control = ShapeTreeGeneratorControl.DEFAULT, via: ShapeTreeGeneratorReference[] = []): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
+    // eslint-disable-next-line no-underscore-dangle
+    const _RemoteShapeTree = this;
+    yield* walkLocalTree(new URL(this.id), control, via);
 
     // Iterate over this ShapeTree.
     async function* walkLocalTree(from: URL, control: ShapeTreeGeneratorControl, via: ShapeTreeGeneratorReference[] = []): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
@@ -198,34 +200,38 @@ export class ShapeTree {
       const step: ShapeTree = stepOrNull; // @@ better dance?
 
       // Queue contents and references.
+      // eslint-disable-next-line guard-for-in
       for (const i in step.contains) {
-        const r = step.contains[i]
+        const r = step.contains[i];
 
         // Steps have URLs so reference by id.
-        const result = { type: 'contains', target: r }
+        const result = { type: 'contains', target: r };
         if (control & ShapeTreeGeneratorControl.REPORT_CONTAINS) // Only report references (for now).
-          control = defaultControl(yield { result, via }, control)
+          // eslint-disable-next-line no-param-reassign
+          control = defaultControl(yield { result, via }, control);
 
         if (control & ShapeTreeGeneratorControl.RECURSE_CONTAINS)
-          yield* visit(r, result)
+          yield* visit(r, result);
       }
 
+      // eslint-disable-next-line guard-for-in
       for (const i in step.references) {
-        const r = step.references[i]
+        const r = step.references[i];
 
         // References don't have URLs so so include verbatim.
-        const result = { type: 'reference', target: r.getReferencedShapeTreeURI() }
+        const result = { type: 'reference', target: r.getReferencedShapeTreeURI() };
         if (control & ShapeTreeGeneratorControl.REPORT_REERENCES)
-          control = defaultControl(yield { result, via }, control)
+          // eslint-disable-next-line no-param-reassign
+          control = defaultControl(yield { result, via }, control);
 
         if (control & ShapeTreeGeneratorControl.RECURSE_REERENCES)
-          yield* visit(r.getReferencedShapeTreeURI(), result)
+          yield* visit(r.getReferencedShapeTreeURI(), result);
       }
 
       async function* visit(stepName: URL, result: ShapeTreeGeneratorReference): AsyncGenerator<ShapeTreeGeneratorResult, void, ShapeTreeGeneratorControl | undefined> {
         let remote: ShapeTree | null = null;
         // Avoid cycles by looking in via for stepName.
-        if (!(via.find(v => v.target.href === stepName.href))) {
+        if (!(via.find((v) => v.target.href === stepName.href))) {
           if (noHash(stepName).href === noHash(new URL(_RemoteShapeTree.id)).href)
             // (optimization) In-tree links can recursively call this generator.
             yield* walkLocalTree(stepName, control, via.concat(result));
@@ -253,11 +259,11 @@ export class ShapeTree {
       const referencedShapeTrees: ReferencedShapeTree[] = new Array();
       return this.getReferencedShapeTreesListDepthFirst(this.getReferences(), referencedShapeTrees);
     }
-  
+
     private getReferencedShapeTreesListBreadthFirst(): List<ReferencedShapeTree> /* throws URISyntaxException, ShapeTreeException * / {
       const referencedShapeTrees: ReferencedShapeTree[] = new Array();
       const queue: Queue<ReferencedShapeTree> = new LinkedList<>(this.getReferences());
-  
+
       while (!queue.isEmpty()) {
         const currentShapeTree: ReferencedShapeTree = queue.poll();
         referencedShapeTrees.push(currentShapeTree);
@@ -271,7 +277,7 @@ export class ShapeTree {
       }
       return referencedShapeTrees;
     }
-  
+
     private getReferencedShapeTreesListDepthFirst(currentReferencedShapeTrees: ReferencedShapeTree[], referencedShapeTrees: ReferencedShapeTree[]): ReferencedShapeTree[] /* throws URISyntaxException, ShapeTreeException * / {
       for (const currentShapeTreeReference of currentReferencedShapeTrees) {
         referencedShapeTrees.push(currentShapeTreeReference);
@@ -291,13 +297,12 @@ export class ShapeTree {
 }
 
 function noHash(url: URL) {
-  const u = url.href
-  return new URL(u.substr(0, u.length - url.hash.length))
+  const u = url.href;
+  return new URL(u.substr(0, u.length - url.hash.length));
 }
 
 function defaultControl(newValue: ShapeTreeGeneratorControl | undefined, oldValue: ShapeTreeGeneratorControl): ShapeTreeGeneratorControl {
   return newValue === undefined
     ? oldValue
-    : newValue
+    : newValue;
 }
-

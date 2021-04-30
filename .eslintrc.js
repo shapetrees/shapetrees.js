@@ -16,8 +16,15 @@ module.exports = {
   plugins: [
     '@typescript-eslint',
   ],
+  // I used eslint-disable-next-line no-param-reassign occasionally -- ericP
   rules: {
     'no-console': 'off', // @@ turn on when done printf debugging
+    'no-else-return': 'off', // @@
+    'padded-blocks': 'off', // @@
+    'curly': 'off', // @@
+    'no-await-in-loop': 'off', // @@ awaits appear in for loops. could be a Promise.all of a map
+    'operator-linebreak': 'off', // @@ differs from java best practice?
+    'nonblock-statement-body-position': 'off', // @@
     'no-continue': 'off',
     'prefer-template': 'off',
     'class-methods-use-this': 'off',

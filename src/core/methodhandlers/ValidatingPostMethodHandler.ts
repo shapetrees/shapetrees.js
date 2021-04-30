@@ -1,23 +1,23 @@
 import log from 'loglevel';
-import { URL } from "url";
-import { Store } from "n3";
+import { URL } from 'url';
+import { Store } from 'n3';
 import { v4 as uuid } from 'uuid';
-import { HttpHeaders, LinkRelations, ShapeTreeResourceType } from "@core/enums";
-import { ShapeTreeException } from "@core/exceptions";
-import { ShapeTree } from "@core/models/ShapeTree";
-import { ShapeTreeContext } from "@core/models/ShapeTreeContext";
-import { ShapeTreeLocator } from "@core/models/ShapeTreeLocator";
-import { ShapeTreePlantResult } from "@core/models/ShapeTreePlantResult";
-import { ValidationContext } from "@core/models/ValidationContext";
-import { ResourceAccessor } from "@core/ResourceAccessor";
-import { ShapeTreeFactory } from "@core/ShapeTreeFactory";
-import { ShapeTreeRequest } from "@core/ShapeTreeRequest";
-import { ShapeTreeResource } from "@core/ShapeTreeResource";
-import { ShapeTreeValidationResponse } from "@core/ShapeTreeValidationResponse";
-import { AbstractValidatingMethodHandler } from "./AbstractValidatingMethodHandler";
-import { ValidatingMethodHandler } from "./ValidatingMethodHandler";
+import { HttpHeaders, LinkRelations, ShapeTreeResourceType } from '@core/enums';
+import { ShapeTreeException } from '@core/exceptions';
+import { ShapeTree } from '@core/models/ShapeTree';
+import { ShapeTreeContext } from '@core/models/ShapeTreeContext';
+import { ShapeTreeLocator } from '@core/models/ShapeTreeLocator';
+import { ShapeTreePlantResult } from '@core/models/ShapeTreePlantResult';
+import { ValidationContext } from '@core/models/ValidationContext';
+import { ResourceAccessor } from '@core/ResourceAccessor';
+import { ShapeTreeFactory } from '@core/ShapeTreeFactory';
+import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
+import { ShapeTreeResource } from '@core/ShapeTreeResource';
+import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
 import { ValidationResult } from '@core/models/ValidationResult';
 import { ShapeTreeVocabulary } from '@core/vocabularies/ShapeTreeVocabulary';
+import { AbstractValidatingMethodHandler } from './AbstractValidatingMethodHandler';
+import { ValidatingMethodHandler } from './ValidatingMethodHandler';
 
 // @Slf4j
 export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler implements ValidatingMethodHandler {
@@ -54,14 +54,13 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
 
         for (const shapeTreeUri of incomingRequestShapeTreeUris) {
           shapeTree = await ShapeTreeFactory.getShapeTree(new URL(shapeTreeUri)) ||
-            (() => { throw new ShapeTreeException(422, "Failed to load shape tree " + shapeTreeUri) })();
+            (() => { throw new ShapeTreeException(422, 'Failed to load shape tree ' + shapeTreeUri); })();
           shapeTreesToPlant.push(shapeTree);
         }
 
         // 1.  Validate the potentially multiple ShapeTrees to ensure they don't conflict
         //     this will also retrieve any already planted ShapeTrees and ensure both existing and are valid
         this.validateShapeTrees(shapeTreeContext, existingResource.getUri(), requestedName, shapeTreesToPlant);
-
 
         // 2. Validate the request body using the appropriate ShapeTree
         this.validateRequestBody(shapeTreeRequest, incomingRequestBodyGraph, normalizedBaseURI, shapeTreesToPlant);
@@ -92,11 +91,11 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
         const results: ShapeTreePlantResult[] = new Array();
         for (const locator of validationContext.getParentContainerLocators()) {
 
-          if (requestedName.endsWith("/")) {
-            requestedName = requestedName.replace("/", "");
+          if (requestedName.endsWith('/')) {
+            requestedName = requestedName.replace('/', '');
           }
           const result: ShapeTreePlantResult = await this.plantShapeTreeLocator(shapeTreeContext, existingResource, shapeTreeRequest.getBody() || '' /* @@ */, shapeTreeRequest.getContentType() || 'text/turtle' /* @@ */, locator, validationContext.getValidatingShapeTree()!! /* @@ */, requestedName) ||
-            (() => { throw new ShapeTreeException(422, "Unable to plant ShapeTree " + locator.getShapeTree()) })();
+            (() => { throw new ShapeTreeException(422, 'Unable to plant ShapeTree ' + locator.getShapeTree()); })();
           results.push(result);
         }
 
@@ -106,7 +105,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       if (e instanceof ShapeTreeException)
         return new ShapeTreeValidationResponse(e);
       // @@ if (e instanceof URISyntaxException)
-      //   return new ShapeTreeValidationResponse(new ShapeTreeException(400, "Value of 'ShapeTree' link header is not a value URI"));
+      //   return new ShapeTreeValidationResponse(new ShapeTreeException(400, 'Value of 'ShapeTree' link header is not a value URI'));
       if (e instanceof Error)
         return new ShapeTreeValidationResponse(new ShapeTreeException(500, e.message));
     }
@@ -115,7 +114,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
 
   private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store | null, baseURI: URL, shapeTreesToPlant: ShapeTree[]): Promise<void> /* throws IOException, URISyntaxException */ {
     const validatingShapeTree: ShapeTree = this.getShapeTreeWithShapeURI(shapeTreesToPlant) ||
-      (() => { throw new ShapeTreeException(422, "Failed to plant shape trees " + shapeTreesToPlant.map(st => st.getId()).join('\n,')) })();
+      (() => { throw new ShapeTreeException(422, 'Failed to plant shape trees ' + shapeTreesToPlant.map((st) => st.getId()).join('\n,')); })();
 
     let validationResult: ValidationResult | null = null;
     // If there is a graph to validate...and a ShapeTree indicates it wants to validate the container body
@@ -127,7 +126,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
 
     // If there is a body graph and it did not pass validation, return an error
     if (graphToValidate !== null && validationResult !== null && validationResult.getValid() === false) {
-      throw new ShapeTreeException(422, "Payload did not meet requirements defined by ShapeTree " + validatingShapeTree.getURI());
+      throw new ShapeTreeException(422, 'Payload did not meet requirements defined by ShapeTree ' + validatingShapeTree.getURI());
     }
   }
 
@@ -141,15 +140,15 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       const targetContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, targetContainerResource);
       if (targetContainerMetadataResource.isExists()) {
         const targetContainerMetadataGraph: Store = this.getGraphForResource(targetContainerMetadataResource, targetContainerURI) ||
-          (() => { throw new ShapeTreeException(422, "Unable to read graph from " + targetContainerURI) })();
+          (() => { throw new ShapeTreeException(422, 'Unable to read graph from ' + targetContainerURI); })();
         const locators: ShapeTreeLocator[] = ShapeTreeLocator.getShapeTreeLocatorsFromGraph(targetContainerMetadataGraph);
         for (const locator of locators) {
           const shapeTree: ShapeTree | null = await ShapeTreeFactory.getShapeTree(new URL(locator.getShapeTree()));
           if (shapeTree !== null) {
-            log.debug("Found ShapeTree [{}] already planted in existing container, adding to list to validate", shapeTree.getURI());
+            log.debug('Found ShapeTree [{}] already planted in existing container, adding to list to validate', shapeTree.getURI());
             shapeTreesToPlant.push(shapeTree);
           } else {
-            throw new ShapeTreeException(500, "Existing container is managed by a shape tree " + locator.getShapeTree() + " which cannot be found");
+            throw new ShapeTreeException(500, 'Existing container is managed by a shape tree ' + locator.getShapeTree() + ' which cannot be found');
           }
         }
       }
@@ -160,13 +159,13 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
 
     for (const shapeTree of shapeTreesToPlant) {
       if (shapeTree.getExpectedResourceType() !== ShapeTreeVocabulary.SHAPETREE_CONTAINER) {
-        throw new ShapeTreeException(400, "The root of any ShapeTree hierarchy must be of type Container");
+        throw new ShapeTreeException(400, 'The root of any ShapeTree hierarchy must be of type Container');
       }
       if (shapeTree.getValidatedByShapeUri() !== null) {
         if (foundShapeURI === null) {
           foundShapeURI = shapeTree.getValidatedByShapeUri();
         } else {
-          throw new ShapeTreeException(400, "Only one ShapeTree provided can specify a ShapeURI");
+          throw new ShapeTreeException(400, 'Only one ShapeTree provided can specify a ShapeURI');
         }
       }
 
@@ -174,7 +173,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
         if (foundContents === null) {
           foundContents = shapeTree.getContains();
         } else {
-          throw new ShapeTreeException(400, "Only one ShapeTree provided can specify Contents");
+          throw new ShapeTreeException(400, 'Only one ShapeTree provided can specify Contents');
         }
       }
     }
@@ -197,7 +196,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
   protected getIncomingLinkHeaderByRelationValue(shapeTreeRequest: ShapeTreeRequest<any>, relation: string): string[] {
     if (shapeTreeRequest.getLinkHeaders().has(relation)) {
       return shapeTreeRequest.getLinkHeaders().get(relation) ||
-        (() => { throw new ShapeTreeException(422, "Link header not set: " + relation) })();
+        (() => { throw new ShapeTreeException(422, 'Link header not set: ' + relation); })();
     }
     return new Array();
   }

@@ -1,4 +1,4 @@
-import { URL } from "url";
+import { URL } from 'url';
 
 // @Getter @AllArgsConstructor @NoArgsConstructor
 export class ShapeTreePlantResult {
@@ -6,7 +6,7 @@ export class ShapeTreePlantResult {
     private shapeTreeURI: URL,
     private rootContainer: URL,
     private rootContainerMetadata: URL,
-    private createdChildren: URL[]
+    private createdChildren: URL[],
   ) { }
 
   getShapeTreeURI(): URL { return this.shapeTreeURI; }
