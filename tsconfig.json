@@ -1,8 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
     "baseUrl": ".",
-    "noEmit": true,
     "paths": {
       "@core/*": ["src/core/*"],
       "@helpers/*": ["src/core/helpers/*"],
@@ -11,8 +12,10 @@
       "@todo/*": ["src/todo/*"],
     }
   },
+  "include": [
+    "src"
+  ],
   "exclude": [
-    "./node_modules/",
-    "./dist/"
+    "node_modules",
   ],
 }

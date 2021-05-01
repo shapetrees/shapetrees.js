@@ -48,7 +48,7 @@ describe('GitHubDeepTests', () => {
   const shapeTreeClient = new FetchShapeTreeClient();
   const data = '/ldp/data/';
   const TEXT_TURTLE = 'text/turtle';
-  const context = new ShapeTreeContext();
+  const context = new ShapeTreeContext(); // can set client authorization here
 
   // Start your server
   beforeEach(() => mockServer.start(8080));
@@ -143,7 +143,7 @@ function prepareServer(mockServer: any, dispatchers: DispatcherEntry[]): Promise
         }, {}));
       const headers: MapObject = {};
       if (d.expectedHeaders)
-        for (const e of d.expectedHeaders?.entries())
+        for (const e of d.expectedHeaders.entries())
           headers[e[0]] = e[1]/*.map(v => v.replace(/\$\{SERVER_BASE\}/g, baseUrl))*/.join(',');
       return rule.thenReply(fixture.statusCode, fixture.body, fixture.headers.reduce((acc: MapObject, h) => {
         const idx = h.indexOf(':');
