@@ -3,7 +3,7 @@
 emulation of OkHttp interface.
 */
 
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 import { URL } from 'url';
 import { IOException, RuntimeException } from './exceptions';
 
@@ -160,11 +160,17 @@ class HttpCall {
       };
       try {
         // @@ should change to the more typed version below
-        const resp = await fetch(request.url, parms);
+        const resp = await fetch(request.url.href, parms);
         const respHeaders: Headers = new Map();
+        // @ts-ignore: type doesn't include iterator symbol
         for (const [header, value] of resp.headers) {
           respHeaders.set(header, [value]);
         }
+        // const respHeaders: Headers = Object.entries(resp.headers)
+        //   .reduce((acc: Map<string, string[]>, pair) => {
+        //     acc.set(pair[0], [pair[1]]);
+        //     return acc;
+        //   }, new Map());
         const text: string = await resp.text();
         return new Response(resp.status, new ResponseBody(text, resp.headers.get('content-type')), respHeaders, request);
       } catch (e) {
