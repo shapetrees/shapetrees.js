@@ -127,7 +127,7 @@ class FetchHttpClient {
   _interceptors: Interceptor[];
 
   constructor(interceptors?: Interceptor[]) {
-    if (interceptors) this._interceptors = interceptors;
+    this._interceptors = interceptors || [];
   }
 
   static Builder = FetchClientBuilder;
