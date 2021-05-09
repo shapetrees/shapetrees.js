@@ -102,21 +102,23 @@ export class FetchRemoteResourceAccessor implements ResourceAccessor {
   }
 
   private mapRemoteResourceToShapeTreeResource(remoteResource: RemoteResource): ShapeTreeResource /* throws ShapeTreeException */ {
-    const shapeTreeResource: ShapeTreeResource = new ShapeTreeResource();
-    try {
-      shapeTreeResource.setUri(remoteResource.getUri());
-    } catch (ex/*: IOException */) {
-      throw new ShapeTreeException(500, 'Error resolving URI');
-    }
+    const shapeTreeResource: ShapeTreeResource = new ShapeTreeResource(
+      remoteResource.getUri(),
+      remoteResource.exists(),
+      remoteResource.isContainer(),
+      remoteResource.getResponseHeaders(),
+    );
+    // try {
+    //   // mumble, something about resolving remoteResource.getUri()
+    // } catch (ex/*: IOException */) {
+    //   throw new ShapeTreeException(500, 'Error resolving URI');
+    // }
 
-    shapeTreeResource.setExists(remoteResource.exists());
-    shapeTreeResource.setContainer(remoteResource.isContainer());
     try {
       shapeTreeResource.setBody(remoteResource.getBody());
     } catch (iex/*: IOException */) {
       shapeTreeResource.setBody(null);
     }
-    shapeTreeResource.setAttributes(remoteResource.getResponseHeaders());
     return shapeTreeResource;
   }
 }

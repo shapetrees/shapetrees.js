@@ -9,6 +9,7 @@ import log from 'loglevel';
 import { GraphHelper } from '@helpers/GraphHelper';
 import { HttpHeaders, LinkRelations } from '@core/enums';
 import { ShapeTreeException } from '@core/exceptions';
+import { RuntimeException } from '../../todo/exceptions';
 import {
   FetchHttpClient, Request, RequestBody, Response, ResponseBody,
 } from '@todo/FetchHttpClient';
@@ -22,11 +23,11 @@ export class RemoteResource {
   private uri: URL;
   private authorizationHeaderValue: string | null;
   private invalidated = false;
-  private _exists: boolean;
-  private responseHeaders: Map<string, string[]>;
-  private parsedLinkHeaders: Map<string, string[]>;
-  private parsedGraph: Store;
-  private rawBody: string;
+  private _exists: boolean | null = null;
+  private responseHeaders: Map<string, string[]> = new Map();
+  private parsedLinkHeaders: Map<string, string[]> = new Map();
+  private parsedGraph: Store | null = null;
+  private rawBody: string = '';
   private clientConfiguration = new ShapeTreeClientConfiguration(false, false);
   public ready: Promise<void>;
 
@@ -54,6 +55,8 @@ export class RemoteResource {
   }
 
   public exists(): boolean {
+    if (this._exists === null)
+      throw new RuntimeException('can\'t call Remoteresource(' + this.uri + ').exists before it is dereferenced');
     return this._exists;
   }
 

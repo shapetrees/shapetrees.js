@@ -1,13 +1,14 @@
 // @Getter @Setter
 export class ShapeTreeResponse {
-  protected statusCode: number;
+  constructor(
+    protected statusCode: number,
+    protected body: string,
+  ) { }
 
-  setStatusCode(statusCode: number) { this.statusCode = statusCode; }
+  // setStatusCode(statusCode: number) { this.statusCode = statusCode; }
   getStatusCode(): number { return this.statusCode; }
 
-  protected body: string | null = null;
-
-  setBody(body: string | null) { this.body = body; }
+  // setBody(body: string | null) { this.body = body; }
   getBody(): string | null { return this.body; }
 
   protected headers: Map<string, string[]> = new Map();

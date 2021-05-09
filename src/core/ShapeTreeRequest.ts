@@ -11,6 +11,6 @@ export interface ShapeTreeRequest<T> {
   getHeaderValue(header: string): string | undefined;
   getBody(): string | null;
   getContentType(): string | null;
-  getResourceType(): ShapeTreeResourceType;
+  getResourceType(): ShapeTreeResourceType | null;
   setResourceType(resourceType: ShapeTreeResourceType): void;
 }

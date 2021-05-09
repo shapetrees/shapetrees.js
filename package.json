@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/janeirodigital/shapetrees.js#readme",
   "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
     "@types/chai": "^4.2.14",
     "@types/js-yaml": "^4.0.0",
     "@types/mocha": "^8.2.0",

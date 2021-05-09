@@ -1,9 +1,10 @@
 {
+  "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
     "noImplicitThis": true,
     "preserveConstEnums": true,
     "lib": [ ],
-    "target": "es2020",
+    "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
     "allowJs": false,

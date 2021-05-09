@@ -7,7 +7,7 @@ import { URL } from 'url';
 
 export class FetchShapeTreeRequest implements ShapeTreeRequest<Request> {
   private request: Request;
-  private resourceType: ShapeTreeResourceType;
+  private resourceType: ShapeTreeResourceType | null = null;
 
   public constructor(request: Request) {
     this.request = request;
@@ -57,7 +57,7 @@ export class FetchShapeTreeRequest implements ShapeTreeRequest<Request> {
   }
 
   // @Override
-  public getResourceType(): ShapeTreeResourceType {
+  public getResourceType(): ShapeTreeResourceType | null {
     return this.resourceType;
   }
 

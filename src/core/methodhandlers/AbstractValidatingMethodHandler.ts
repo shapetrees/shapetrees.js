@@ -219,20 +219,17 @@ export abstract class AbstractValidatingMethodHandler {
       [primaryPlantResult] = plantResults;
     }
 
-    const response: ShapeTreeValidationResponse = new ShapeTreeValidationResponse();
-
-    if (primaryPlantResult != null) {
-      response.setStatusCode(201);
+    if (primaryPlantResult === null) {
+      const message = 'Unable to find "primary" plant result in createPlantResponse';
+      log.error(message);
+      return new ShapeTreeValidationResponse(new ShapeTreeException(400, message));
+    } else {
+      const response =  new ShapeTreeValidationResponse(201, '');
       response.addResponseHeader(HttpHeaders.LOCATION, primaryPlantResult.getRootContainer().toString());
       response.addResponseHeader(HttpHeaders.LINK, '<' + primaryPlantResult.getRootContainerMetadata().toString() + '>; rel="' + LinkRelations.SHAPETREE + '"');
       response.addResponseHeader(HttpHeaders.CONTENT_TYPE, AbstractValidatingMethodHandler.TEXT_TURTLE);
-      response.setBody('');
-    } else {
-      log.error('Unable to find "primary" plant result in createPlantResponse');
-      response.setStatusCode(400);
+      return response;
     }
-
-    return response;
   }
 
   /**
@@ -349,6 +346,10 @@ export abstract class AbstractValidatingMethodHandler {
    * @throws URISyntaxException URISyntaxException
    */
   protected async validateAgainstParentContainer(shapeTreeContext: ShapeTreeContext, graphToValidate: Store | null, baseURI: URL, parentContainer: ShapeTreeResource, resourceName: string, shapeTreeRequest: ShapeTreeRequest<any>): Promise<ValidationContext | null> /* throws IOException, URISyntaxException */ {
+    const resourceType: ShapeTreeResourceType = shapeTreeRequest.getResourceType()!;
+    if (resourceType === null) {
+      throw new ShapeTreeException(500, 'Can\'t validate against parent of ' + resourceName + ' because we don\'t know its resourceType');
+    }
     const parentContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, parentContainer);
     // If there is no metadata for the parent container, it is not managed
     if (!parentContainerMetadataResource.isExists()) return null;
@@ -371,7 +372,7 @@ export abstract class AbstractValidatingMethodHandler {
 
     const targetShapeTreeHint: URL = this.getIncomingTargetShapeTreeHint(shapeTreeRequest) ||
       (() => { throw new ShapeTreeException(422, 'Unable to locate ShapeTree hint ' + shapeTreeRequest.getURI()); })();
-    const targetShapeTree: ShapeTree | null = await shapeTreeWithContents.findMatchingContainsShapeTree(resourceName, targetShapeTreeHint, shapeTreeRequest.getResourceType());
+    const targetShapeTree: ShapeTree | null = await shapeTreeWithContents.findMatchingContainsShapeTree(resourceName, targetShapeTreeHint, resourceType);
 
     // If no targetShapeTree is returned, it can be assumed that no validation is required
     let validationResult: ValidationResult | null = null;
@@ -382,7 +383,7 @@ export abstract class AbstractValidatingMethodHandler {
         // ...and a focus node was provided via the focusNode header, then we perform our validation
         const focusNodeURI: URL = this.getIncomingResolvedFocusNode(shapeTreeRequest, baseURI);
         log.debug('Validating against parent container.  ST with Contents {}, Focus Node {}', shapeTreeWithContents.getURI(), focusNodeURI);
-        validationResult = await targetShapeTree.validateContent(graphToValidate, focusNodeURI, shapeTreeRequest.getResourceType());
+        validationResult = await targetShapeTree.validateContent(graphToValidate, focusNodeURI, resourceType);
       }
 
       // If there is a body graph and it did not pass validation, return an error

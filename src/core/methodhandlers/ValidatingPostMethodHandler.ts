@@ -31,13 +31,14 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
     try {
       const shapeTreeContext: ShapeTreeContext = this.buildContextFromRequest(shapeTreeRequest);
       const existingResource: ShapeTreeResource = await this.getRequestResource(shapeTreeContext, shapeTreeRequest);
-      shapeTreeRequest.setResourceType(this.determineResourceType(shapeTreeRequest, existingResource));
+      const resourceType = this.determineResourceType(shapeTreeRequest, existingResource);
+      shapeTreeRequest.setResourceType(resourceType);
 
       this.ensureRequestResourceExists(existingResource, `Parent Container ${existingResource.getUri().href} not found`);
 
       let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, uuid().toString());
       const incomingRequestShapeTreeUris: string[] = this.getIncomingLinkHeaderByRelationValue(shapeTreeRequest, LinkRelations.SHAPETREE);
-      const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), requestedName, shapeTreeRequest.getResourceType());
+      const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), requestedName, resourceType);
       const incomingRequestBodyGraph: Store | null = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
 
       if (incomingRequestShapeTreeUris !== null && incomingRequestShapeTreeUris.length !== 0) {
@@ -63,7 +64,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
         this.validateShapeTrees(shapeTreeContext, existingResource.getUri(), requestedName, shapeTreesToPlant);
 
         // 2. Validate the request body using the appropriate ShapeTree
-        this.validateRequestBody(shapeTreeRequest, incomingRequestBodyGraph, normalizedBaseURI, shapeTreesToPlant);
+        this.validateRequestBody(shapeTreeRequest, incomingRequestBodyGraph, normalizedBaseURI, shapeTreesToPlant, resourceType);
 
         // 3. Validate the request against the parent container which may already be a managed container
         this.validateAgainstParentContainer(shapeTreeContext, incomingRequestBodyGraph, normalizedBaseURI, existingResource, requestedName, shapeTreeRequest);
@@ -108,11 +109,12 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       //   return new ShapeTreeValidationResponse(new ShapeTreeException(400, 'Value of 'ShapeTree' link header is not a value URI'));
       if (e instanceof Error)
         return new ShapeTreeValidationResponse(new ShapeTreeException(500, e.message));
+
+      return new ShapeTreeValidationResponse(new ShapeTreeException(500, 'Program flow exception: unexpected exception:' + e));
     }
-    return new ShapeTreeValidationResponse(); // @@ tsc thought not all paths returned
   }
 
-  private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store | null, baseURI: URL, shapeTreesToPlant: ShapeTree[]): Promise<void> /* throws IOException, URISyntaxException */ {
+  private async validateRequestBody(shapeTreeRequest: ShapeTreeRequest<any>, graphToValidate: Store | null, baseURI: URL, shapeTreesToPlant: ShapeTree[], resourceType: ShapeTreeResourceType): Promise<void> /* throws IOException, URISyntaxException */ {
     const validatingShapeTree: ShapeTree = this.getShapeTreeWithShapeURI(shapeTreesToPlant) ||
       (() => { throw new ShapeTreeException(422, 'Failed to plant shape trees ' + shapeTreesToPlant.map((st) => st.getId()).join('\n,')); })();
 
@@ -121,7 +123,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
     if (graphToValidate !== null && validatingShapeTree !== null && validatingShapeTree.getValidatedByShapeUri() !== null) {
       // ...and a focus node was provided via the focusNode header, then we perform our validation
       const focusNodeURI: URL = this.getIncomingResolvedFocusNode(shapeTreeRequest, baseURI);
-      validationResult = await validatingShapeTree.validateContent(graphToValidate, focusNodeURI, shapeTreeRequest.getResourceType());
+      validationResult = await validatingShapeTree.validateContent(graphToValidate, focusNodeURI, resourceType);
     }
 
     // If there is a body graph and it did not pass validation, return an error

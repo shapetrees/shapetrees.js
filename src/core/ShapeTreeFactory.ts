@@ -70,21 +70,17 @@ export class ShapeTreeFactory {
       return;
     }
 
-    const shapeTree: ShapeTree = new ShapeTree(ShapeTreeFactory.contentsLoader);
-    // Set the URI as the ID (string representation)
-    shapeTree.setId(shapeTreeURIString);
-    // Set the expected resource type
     const expectsType = expectOneObject<NamedNode>(model, resource, nn(ShapeTreeVocabulary.EXPECTS_TYPE),
       () => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} should have one st:expectsType`); });
-    shapeTree.setExpectedResourceType(expectsType.value);
-    // Set Shape URI
-    shapeTree.setValidatedByShapeUri(this.getStringValue(model, resource, ShapeTreeVocabulary.VALIDATED_BY));
-    // Set Label
-    shapeTree.setLabel(ShapeTreeFactory.getStringValue(model, resource, ShapeTreeFactory.RDFS_LABEL));
-    // Set Supports
-    shapeTree.setSupports(ShapeTreeFactory.getStringValue(model, resource, ShapeTreeVocabulary.SUPPORTS));
-    // Set Reference collection
-    shapeTree.setReferences(new Array());
+    const shapeTree: ShapeTree = new ShapeTree(
+      ShapeTreeFactory.contentsLoader,
+      shapeTreeURIString, // Set the URI as the ID (string representation)
+      expectsType.value, // Set the expected resource type
+      ShapeTreeFactory.getStringValue(model, resource, ShapeTreeVocabulary.SUPPORTS), // Set Supports
+      new Array(), // Set Reference collection
+      this.getStringValue(model, resource, ShapeTreeVocabulary.VALIDATED_BY), // Set Shape URI
+      ShapeTreeFactory.getStringValue(model, resource, ShapeTreeFactory.RDFS_LABEL), // Set Label
+    );
 
     // Add the shapeTree to the cache before any of the recursive processing
     ShapeTreeFactory.localShapeTreeCache.set(shapeTreeURI, shapeTree);

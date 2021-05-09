@@ -27,10 +27,14 @@ export class FetchHelper {
      * @return ShapeTreeResource instance with contents and response headers from response
      */
   public static mapFetchResponseToShapeTreeResource(response: Response, requestURI: URL, requestHeaders: Map<string, string[]>): ShapeTreeResource {
-    const shapeTreeResource: ShapeTreeResource = new ShapeTreeResource();
-
-    shapeTreeResource.setExists(response.isSuccessful());
-    shapeTreeResource.setContainer(FetchHelper.isContainerFromHeaders(requestHeaders));
+    const location: string | null = response.header(HttpHeaders.LOCATION, requestURI.href);
+    if (location === null) throw new NullPointerException('response location');
+    const shapeTreeResource: ShapeTreeResource = new ShapeTreeResource(
+      new URL(location!!),
+      response.isSuccessful(),
+      FetchHelper.isContainerFromHeaders(requestHeaders),
+      response.headers(),
+    );
 
     try {
       const body = response.body();
@@ -40,10 +44,6 @@ export class FetchHelper {
       log.error('Exception retrieving body string');
       shapeTreeResource.setBody(null);
     }
-    shapeTreeResource.setAttributes(response.headers());
-    const location: string | null = response.header(HttpHeaders.LOCATION, requestURI.href);
-    if (location === null) throw new NullPointerException('response location');
-    shapeTreeResource.setUri(new URL(location!!));
 
     return shapeTreeResource;
   }
@@ -54,17 +54,11 @@ export class FetchHelper {
      * @return ShapeTreeResponse with values from Fetch response
      */
   public static mapFetchResponseToShapeTreeResponse(response: Response): ShapeTreeResponse {
-    const shapeTreeResponse: ShapeTreeResponse = new ShapeTreeResponse();
-    try {
-      const respBody: ResponseBody | null = response.body();
-      if (respBody === null) throw new NullPointerException('HTTP response body');
-      shapeTreeResponse.setBody(respBody.string());
-    } catch (ex /* IOException | NullPointerException */) {
-      log.error('Exception retrieving body string');
-      shapeTreeResponse.setBody(null);
+    const shapeTreeResponse: ShapeTreeResponse = new ShapeTreeResponse(response.code(), response.body().string());
+    if (response.body().string() === '') {
+      log.error('Exception retrieving body string'); // !! needed? useful?
     }
     shapeTreeResponse.setHeaders(response.headers());
-    shapeTreeResponse.setStatusCode(response.code());
     return shapeTreeResponse;
   }
 

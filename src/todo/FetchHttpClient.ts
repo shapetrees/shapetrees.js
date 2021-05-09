@@ -29,7 +29,7 @@ class RequestBody {
 }
 
 class RequestBuilder {
-  private _url: URL;
+  private _url: URL | null = null;
 
   _headers: Map<string, string[]> = new Map(); // EGP: need a multimap?
 
@@ -74,7 +74,11 @@ class RequestBuilder {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  build(): Request { return new Request(this.method, this._url, this._headers, this.body); }
+  build(): Request {
+    if (this._url === null)
+      throw new RuntimeException('RequestBuilder URL not set before build() called');
+    return new Request(this.method, this._url, this._headers, this.body);
+  }
 }
 
 class Request {
@@ -232,10 +236,10 @@ class Response {
       : list[0];
   }
 
-  _body: ResponseBody = new ResponseBody('Response not initialized', 'text/plain');
+  _body: ResponseBody;
 
   // eslint-disable-next-line class-methods-use-this
-  body(): ResponseBody | null { return this._body; }
+  body(): ResponseBody { return this._body; }
 }
 
 class ResponseBody {

@@ -1,6 +1,7 @@
 import log from 'loglevel';
 import { URL } from 'url';
 import { DataFactory, Store } from 'n3';
+import { ShapeTreeResourceType } from '@core/enums';
 import { ResourceAccessor } from '@core/ResourceAccessor';
 import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
 import { ShapeTreeValidationResponse } from '@core/ShapeTreeValidationResponse';
@@ -32,7 +33,8 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
 
       const shapeTreeContext: ShapeTreeContext = this.buildContextFromRequest(shapeTreeRequest);
       const existingResource: ShapeTreeResource = await this.getRequestResource(shapeTreeContext, shapeTreeRequest);
-      shapeTreeRequest.setResourceType(this.determineResourceType(shapeTreeRequest, existingResource));
+      const resourceType: ShapeTreeResourceType = this.determineResourceType(shapeTreeRequest, existingResource);
+      shapeTreeRequest.setResourceType(resourceType);
 
       // Get the parent container URI
       const parentURI: URL = this.getParentContainerURI(existingResource);
@@ -44,7 +46,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
       // Retrieve graph of parent container metadata resource
       const parentContainerMetadataGraph: Store | null = this.getGraphForResource(parentContainerMetadataResource, parentURI);
 
-      const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), null, shapeTreeRequest.getResourceType());
+      const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), null, resourceType);
       // Get the shape tree that manages that container
       const shapeTreeManagedContainer: boolean = parentContainerMetadataGraph != null && parentContainerMetadataGraph.getQuads(null, DataFactory.namedNode(ShapeTreeVocabulary.HAS_SHAPE_TREE_LOCATOR), null, null).length > 0;
       // If managed, do validation
@@ -68,7 +70,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
             - whose URI matches the target shape tree hint provided via Link header
          */
         const targetShapeTreeHint: URL | null = this.getIncomingTargetShapeTreeHint(shapeTreeRequest);
-        const targetShapeTree: ShapeTree | null = await validatingShapeTree.findMatchingContainsShapeTree(requestedName, targetShapeTreeHint, shapeTreeRequest.getResourceType());
+        const targetShapeTree: ShapeTree | null = await validatingShapeTree.findMatchingContainsShapeTree(requestedName, targetShapeTreeHint, resourceType);
 
         let validationResult: ValidationResult | null = null;
         if (targetShapeTree !== null) {
@@ -89,7 +91,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
           }
 
           const focusNodeURI: URL = this.getIncomingResolvedFocusNode(shapeTreeRequest, normalizedBaseURI);
-          validationResult = await targetShapeTree.validateContent(existingResourceGraph, focusNodeURI, shapeTreeRequest.getResourceType());
+          validationResult = await targetShapeTree.validateContent(existingResourceGraph, focusNodeURI, resourceType);
         }
 
         if (targetShapeTree === null || validationResult!!.getValid()) {

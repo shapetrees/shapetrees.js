@@ -19,34 +19,33 @@ import { DocumentContents } from './DocumentContents';
 // @Getter @Setter
 // @Slf4j
 export class ShapeTree {
-  private documentContentsLoader: DocumentContentsLoader;
-  private id: string;
-  private expectedResourceType: string;
-  private validatedByShapeUri: string | null = null;
-  private label: string | null = null;
-  private supports: string | null;
   private contains: URL[] = new Array();
-  private references: ReferencedShapeTree[];
 
-  public constructor(documentContentsLoader: DocumentContentsLoader) {
-    this.documentContentsLoader = documentContentsLoader;
-  }
+  public constructor(
+    private documentContentsLoader: DocumentContentsLoader,
+    private id: string,
+    private expectedResourceType: string,
+    private supports: string | null,
+    private references: ReferencedShapeTree[],
+    private validatedByShapeUri: string | null,
+    private label: string | null,
+  ) { }
 
   getId(): string { return this.id; }
-  setId(id: string): void { this.id = id; }
+  // setId(id: string): void { this.id = id; }
   getExpectedResourceType(): string { return this.expectedResourceType; }
-  setExpectedResourceType(expectedResourceType: string): void { this.expectedResourceType = expectedResourceType; }
+  // setExpectedResourceType(expectedResourceType: string): void { this.expectedResourceType = expectedResourceType; }
 
   getValidatedByShapeUri(): string | null { return this.validatedByShapeUri; }
-  setValidatedByShapeUri(validatedByShapeUri: string | null): void { this.validatedByShapeUri = validatedByShapeUri; }
+  // setValidatedByShapeUri(validatedByShapeUri: string | null): void { this.validatedByShapeUri = validatedByShapeUri; }
   getLabel(): string | null { return this.label; }
-  setLabel(label: string | null): void { this.label = label; }
+  // setLabel(label: string | null): void { this.label = label; }
   getSupports(): string | null { return this.supports; }
-  setSupports(supports: string | null): void { this.supports = supports; }
+  // setSupports(supports: string | null): void { this.supports = supports; }
   getContains(): URL[] { return this.contains; }
   setContains(contains: URL[]): void { this.contains = contains; }
   getReferences(): ReferencedShapeTree[] { return this.references; }
-  setReferences(references: ReferencedShapeTree[]): void { this.references = references; }
+  // setReferences(references: ReferencedShapeTree[]): void { this.references = references; }
 
   public getURI(): URL /* throws URISyntaxException */ {
     return new URL(this.id);
