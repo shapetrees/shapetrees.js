@@ -25,7 +25,7 @@ export class ShapeTreeFactory {
   private static RDFS_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label';
   private static contentsLoader: DocumentContentsLoader = new HttpDocumentContentsLoader(null, null);
 
-  private static localShapeTreeCache: Map<URL, ShapeTree> = new Map(); // @@ <string, ShapeTree> ?
+  private static localShapeTreeCache: Map<string, ShapeTree> = new Map();
 
   public static setContentsLoader(contentsLoader: DocumentContentsLoader): void {
     ShapeTreeFactory.contentsLoader = contentsLoader;
@@ -36,14 +36,14 @@ export class ShapeTreeFactory {
       return null;
     }
 
-    if (this.localShapeTreeCache.has(shapeTreeURI)) {
-      log.debug('[{}] previously cached -- returning', shapeTreeURI.toString());
-      return this.localShapeTreeCache.get(shapeTreeURI) || null;
+    if (this.localShapeTreeCache.has(shapeTreeURI.href)) {
+      log.debug('[<%s>] previously cached -- returning', shapeTreeURI.toString());
+      return this.localShapeTreeCache.get(shapeTreeURI.href) || null;
     }
 
     this.dereferenceAndParseShapeTreeResource(shapeTreeURI);
 
-    return this.localShapeTreeCache.get(shapeTreeURI) || null;
+    return this.localShapeTreeCache.get(shapeTreeURI.href) || null;
   }
 
   private static async dereferenceAndParseShapeTreeResource(shapeTreeURI: URL): Promise<void> /* throws URISyntaxException, ShapeTreeException */ {
@@ -67,8 +67,8 @@ export class ShapeTreeFactory {
     log.debug('Entering recursivelyParseShapeTree for [{}]', shapeTreeURIString);
     const shapeTreeURI: URL = new URL(shapeTreeURIString);
 
-    if (this.localShapeTreeCache.has(shapeTreeURI)) {
-      log.debug('[{}] previously cached -- returning', shapeTreeURIString);
+    if (this.localShapeTreeCache.has(shapeTreeURI.href)) {
+      log.debug('[<%s>] previously cached -- returning', shapeTreeURIString);
       return;
     }
 
@@ -85,7 +85,7 @@ export class ShapeTreeFactory {
     );
 
     // Add the shapeTree to the cache before any of the recursive processing
-    ShapeTreeFactory.localShapeTreeCache.set(shapeTreeURI, shapeTree);
+    ShapeTreeFactory.localShapeTreeCache.set(shapeTreeURI.href, shapeTree);
 
     const referencesProperty: NamedNode = nn(ShapeTreeVocabulary.REFERENCES);
     const referenceStatements: Quad[] = model.getQuads(resource, referencesProperty, null, null);
@@ -95,7 +95,7 @@ export class ShapeTreeFactory {
         () => { throw new ShapeTreeException(500, `Shape Tree ${referenceResource.value} st:hasShapeTree not found`); });
       const shapePath = expectOneObject<Literal>(model, referenceResource, nn(ShapeTreeVocabulary.TRAVERSE_VIA_SHAPE_PATH),
         () => { throw new ShapeTreeException(500, `Shape Tree ${referenceResource.value} st:traverseViaShapePath not found`); });
-      if (!ShapeTreeFactory.localShapeTreeCache.has(new URL(referenceShapeTreeUri.value))) {
+      if (!ShapeTreeFactory.localShapeTreeCache.has(referenceShapeTreeUri.value)) {
         // If the model contains the referenced ShapeTree, go ahead and parse and cache it
         ShapeTreeFactory.recursivelyParseShapeTree(model, referenceShapeTreeUri);
       }
@@ -120,7 +120,7 @@ export class ShapeTreeFactory {
       // }
       shapeTree.setContains(uris.map((uri) => new URL(uri.value)));
       for (const uri of uris) {
-        if (!this.localShapeTreeCache.has(new URL(uri.value)) && !this.isShapeTreeAllowIRI(uri.value)) {
+        if (!this.localShapeTreeCache.has(uri.value) && !this.isShapeTreeAllowIRI(uri.value)) {
           this.recursivelyParseShapeTree(model, nn(uri.value));
         }
       }
