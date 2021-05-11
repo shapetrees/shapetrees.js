@@ -1,6 +1,8 @@
 import log from 'loglevel';
 import { URL } from 'url';
-import { expectOneObject, expectType, expectTypes } from '@todo/graphHelper';
+import {
+  dumpQuads, expectOneObject, expectType, expectTypes,
+} from '@todo/graphHelper';
 import {
   BlankNode, DataFactory, Literal, NamedNode, Quad, Store,
 } from 'n3';
@@ -71,7 +73,7 @@ export class ShapeTreeFactory {
     }
 
     const expectsType = expectOneObject<NamedNode>(model, resource, nn(ShapeTreeVocabulary.EXPECTS_TYPE),
-      () => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} should have one st:expectsType`); });
+      (g: Store) => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} should have one st:expectsType in ${dumpQuads(g)}`); });
     const shapeTree: ShapeTree = new ShapeTree(
       ShapeTreeFactory.contentsLoader,
       shapeTreeURIString, // Set the URI as the ID (string representation)
@@ -113,6 +115,9 @@ export class ShapeTreeFactory {
       if (uris.length === 0) {
         throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`);
       }
+      // if (uris.length === 0) {
+      //   throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains: ${dumpQuads([model, resource])}}`);
+      // }
       shapeTree.setContains(uris.map((uri) => new URL(uri.value)));
       for (const uri of uris) {
         if (!this.localShapeTreeCache.has(new URL(uri.value)) && !this.isShapeTreeAllowIRI(uri.value)) {
