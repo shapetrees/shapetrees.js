@@ -44,7 +44,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
       const parentContainerResource: ShapeTreeResource = await this.resourceAccessor.getResource(shapeTreeContext, parentURI);
       const parentContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, parentContainerResource);
       // Retrieve graph of parent container metadata resource
-      const parentContainerMetadataGraph: Store | null = this.getGraphForResource(parentContainerMetadataResource, parentURI);
+      const parentContainerMetadataGraph: Store | null = await this.getGraphForResource(parentContainerMetadataResource, parentURI);
 
       const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), null, resourceType);
       // Get the shape tree that manages that container
@@ -75,7 +75,7 @@ export class ValidatingPatchMethodHandler extends AbstractValidatingMethodHandle
         let validationResult: ValidationResult | null = null;
         if (targetShapeTree !== null) {
           // Get existing resource graph (prior to PATCH)
-          let existingResourceGraph: Store | null = this.getGraphForResource(existingResource, normalizedBaseURI);
+          let existingResourceGraph: Store | null = await this.getGraphForResource(existingResource, normalizedBaseURI);
           if (existingResourceGraph == null) {
             log.debug('Existing graph to patch does not exist.  Creating an empty graph.');
             existingResourceGraph = new Store();

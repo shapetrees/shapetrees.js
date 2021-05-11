@@ -39,7 +39,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
       let requestedName: string = this.getIncomingHeaderValueWithDefault(shapeTreeRequest, HttpHeaders.SLUG, uuid().toString());
       const incomingRequestShapeTreeUris: string[] = this.getIncomingLinkHeaderByRelationValue(shapeTreeRequest, LinkRelations.SHAPETREE);
       const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), requestedName, resourceType);
-      const incomingRequestBodyGraph: Store | null = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
+      const incomingRequestBodyGraph: Store | null = await this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
 
       if (incomingRequestShapeTreeUris !== null && incomingRequestShapeTreeUris.length !== 0) {
         // This means we're Planting a new Shape Tree
@@ -141,7 +141,7 @@ export class ValidatingPostMethodHandler extends AbstractValidatingMethodHandler
     if (targetContainerResource.isExists()) {
       const targetContainerMetadataResource: ShapeTreeResource = await this.getShapeTreeMetadataResourceForResource(shapeTreeContext, targetContainerResource);
       if (targetContainerMetadataResource.isExists()) {
-        const targetContainerMetadataGraph: Store = this.getGraphForResource(targetContainerMetadataResource, targetContainerURI) ||
+        const targetContainerMetadataGraph: Store = await this.getGraphForResource(targetContainerMetadataResource, targetContainerURI) ||
           (() => { throw new ShapeTreeException(422, 'Unable to read graph from ' + targetContainerURI); })();
         const locators: ShapeTreeLocator[] = ShapeTreeLocator.getShapeTreeLocatorsFromGraph(targetContainerMetadataGraph);
         for (const locator of locators) {

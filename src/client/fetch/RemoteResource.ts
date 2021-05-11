@@ -72,7 +72,7 @@ export class RemoteResource {
   }
 
   // Lazy-load graph when requested
-  public getGraph(baseURI: URL): Store | null /* throws IOException */ {
+  public async getGraph(baseURI: URL): Promise<Store | null> /* throws IOException */ {
     if (!this._exists) return null;
 
     if (this.invalidated) {
@@ -81,7 +81,7 @@ export class RemoteResource {
     }
 
     if (this.parsedGraph == null) {
-      this.parsedGraph = GraphHelper.readStringIntoGraph(baseURI, this.rawBody, this.getFirstHeaderByName(HttpHeaders.CONTENT_TYPE) || 'text/turtle');
+      this.parsedGraph = await GraphHelper.readStringIntoGraph(baseURI, this.rawBody, this.getFirstHeaderByName(HttpHeaders.CONTENT_TYPE) || 'text/turtle');
     }
     return this.parsedGraph;
   }

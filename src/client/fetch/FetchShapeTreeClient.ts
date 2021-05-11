@@ -37,12 +37,15 @@ export class FetchShapeTreeClient /* @@ implements ShapeTreeClient */ {
 
   // @Override
   // eslint-disable-next-line class-methods-use-this
-  public discoverShapeTree(context: ShapeTreeContext, targetContainer: URL): ShapeTreeLocator[] /* throws IOException */ {
+  public async discoverShapeTree(context: ShapeTreeContext, targetContainer: URL): Promise<ShapeTreeLocator[]> /* throws IOException */ {
     log.debug('Discovering Shape Trees present at {}', targetContainer);
     const targetContainerResource: RemoteResource = new RemoteResource(targetContainer, context.getAuthorizationHeaderValue());
     const targetContainerMetadataResource: RemoteResource = targetContainerResource.getMetadataResource(context.getAuthorizationHeaderValue());
     // could getGraph() return null here (targetContainerMetadataResource.exists == mull)?
-    return ShapeTreeLocator.getShapeTreeLocatorsFromGraph(targetContainerMetadataResource.getGraph(targetContainerResource.getUri())!!);
+    const shapeTreeGraph: Store | null = await targetContainerMetadataResource.getGraph(targetContainerResource.getUri());
+    if (shapeTreeGraph === null)
+      throw new IOException(`${targetContainer} did not contain a graph`);
+    return ShapeTreeLocator.getShapeTreeLocatorsFromGraph(shapeTreeGraph);
   }
 
   // @Eric In typescript if there are declaration of the name in a class member the las

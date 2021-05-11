@@ -57,19 +57,21 @@ export class GraphHelper {
      * @throws ShapeTreeException ShapeTreeException
      */
   /* throws ShapeTreeException */
-  public static readStringIntoGraph(baseURI: URL, rawContent: string, contentType: string): Store {
+  public static readStringIntoGraph(baseURI: URL, rawContent: string, contentType: string): Promise<Store> {
     try {
       const ret = new Store();
       if (contentType === 'text/turtle') {
         const p = new Parser({ baseIRI: baseURI.href });
-        ret.addQuads(p.parse(rawContent/*, (error, quad, prefixes) => {
-          if (error) throw error;
-          if (quad) ret.addQuad(quad);
-        }*/));
+        return new Promise((resolve, reject) => {
+          p.parse(rawContent, (error, quad, prefixes) => {
+            if (error) throw error;
+            else if (quad) ret.addQuad(quad);
+            else resolve(ret);
+          });
+        });
       } else {
         throw Error(`unsupported content type: ${rawContent}`);
       }
-      return ret;
     } catch (ex) {
       throw new ShapeTreeException(422, `Error processing input - ${ex.getMessage()}`);
     }

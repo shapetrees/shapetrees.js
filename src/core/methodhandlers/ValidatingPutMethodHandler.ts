@@ -29,7 +29,7 @@ export class ValidatingPutMethodHandler extends AbstractValidatingMethodHandler 
       const parentURI: URL = this.getParentContainerURI(existingResource);
 
       const normalizedBaseURI: URL = this.normalizeBaseURI(existingResource.getUri(), null, resourceType);
-      const incomingRequestBodyGraph: Store | null = this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
+      const incomingRequestBodyGraph: Store | null = await this.getIncomingBodyGraph(shapeTreeRequest, normalizedBaseURI);
       let requestedName: string = this.getRequestResourceName(existingResource);
       const parentContainerResource: ShapeTreeResource = await this.resourceAccessor.getResource(shapeTreeContext, parentURI);
       const validationContext: ValidationContext | null = await this.validateAgainstParentContainer(shapeTreeContext, incomingRequestBodyGraph, normalizedBaseURI, parentContainerResource, requestedName, shapeTreeRequest);

@@ -54,7 +54,7 @@ export class ShapeTreeFactory {
       if (contents === null || (body = contents.getBody()) === null) {
         throw new ShapeTreeException(422, 'Unable to load ShapeTree ' + shapeTreeURI);
       }
-      const model: Store = GraphHelper.readStringIntoGraph(shapeTreeURI, body /* @@ */, contents.getContentType());
+      const model: Store = await GraphHelper.readStringIntoGraph(shapeTreeURI, body /* @@ */, contents.getContentType());
       const resource: NamedNode = nn(shapeTreeURI.toString());
       this.recursivelyParseShapeTree(model, resource);
     } catch (rnfe/*: RiotNotFoundException */) {

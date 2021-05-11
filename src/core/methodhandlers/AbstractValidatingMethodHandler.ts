@@ -135,15 +135,15 @@ export abstract class AbstractValidatingMethodHandler {
    * @return Graph representation of request body
    * @throws ShapeTreeException ShapeTreeException
    */
-  protected getIncomingBodyGraph(shapeTreeRequest: ShapeTreeRequest<any>, baseURI: URL): Store | null /* throws ShapeTreeException */ {
+  protected async getIncomingBodyGraph(shapeTreeRequest: ShapeTreeRequest<any>, baseURI: URL): Promise<Store | null> /* throws ShapeTreeException */ {
     log.debug('Reading request body into graph with baseURI {}', baseURI);
 
     if (shapeTreeRequest.getResourceType() !== ShapeTreeResourceType.NON_RDF &&
       shapeTreeRequest.getBody() !== null &&
       shapeTreeRequest.getBody()!!.length > 0) {
-      return GraphHelper.readStringIntoGraph(baseURI, shapeTreeRequest.getBody() || '', shapeTreeRequest.getContentType() || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ default not in java code */);
+      return await GraphHelper.readStringIntoGraph(baseURI, shapeTreeRequest.getBody() || '', shapeTreeRequest.getContentType() || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ default not in java code */);
     }
-    return null;
+    return Promise.resolve(null);
   }
 
   /**
@@ -326,10 +326,10 @@ export abstract class AbstractValidatingMethodHandler {
    * @return Graph representation of resource
    * @throws ShapeTreeException ShapeTreeException
    */
-  protected getGraphForResource(resource: ShapeTreeResource, baseURI: URL): Store | null /* throws ShapeTreeException */ {
+  protected async getGraphForResource(resource: ShapeTreeResource, baseURI: URL): Promise<Store | null> /* throws ShapeTreeException */ {
     if (!resource.isExists()) return null;
 
-    return GraphHelper.readStringIntoGraph(baseURI, resource.getBody() || '' /* @@ */, resource.getFirstAttributeValue(HttpHeaders.CONTENT_TYPE) || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ */);
+    return await GraphHelper.readStringIntoGraph(baseURI, resource.getBody() || '' /* @@ */, resource.getFirstAttributeValue(HttpHeaders.CONTENT_TYPE) || AbstractValidatingMethodHandler.TEXT_TURTLE /* @@ */);
   }
 
   /**
@@ -354,7 +354,7 @@ export abstract class AbstractValidatingMethodHandler {
     // If there is no metadata for the parent container, it is not managed
     if (!parentContainerMetadataResource.isExists()) return null;
 
-    const parentContainerMetadataGraph: Store | null = this.getGraphForResource(parentContainerMetadataResource, parentContainer.getUri()) ||
+    const parentContainerMetadataGraph: Store | null = await this.getGraphForResource(parentContainerMetadataResource, parentContainer.getUri()) ||
       (() => { throw new ShapeTreeException(422, 'No metadata graph for ' + parentContainer.getUri()); })();
     const locators: ShapeTreeLocator[] = ShapeTreeLocator.getShapeTreeLocatorsFromGraph(parentContainerMetadataGraph);
 
@@ -430,7 +430,7 @@ export abstract class AbstractValidatingMethodHandler {
     // Get the existing graph and reuse it, if possible, if not, create a new graph
     let plantedContainerMetadataGraph: Store;
     if (plantedContainerMetadataResource.isExists()) {
-      plantedContainerMetadataGraph = this.getGraphForResource(plantedContainerMetadataResource, plantedContainerResource.getUri()) ||
+      plantedContainerMetadataGraph = await this.getGraphForResource(plantedContainerMetadataResource, plantedContainerResource.getUri()) ||
         (() => { throw new ShapeTreeException(422, 'Unable to load graph ' + plantedContainerResource.getUri()); })();
     } else {
       plantedContainerMetadataGraph = new Store(); // DataFactory.createDefaultModel().getGraph();
