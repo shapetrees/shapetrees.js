@@ -3,7 +3,7 @@
  */
 
 import log from 'loglevel';
-import { Chain, Interceptor, MediaType, Headers, Request, ResponseBuilder, Response, ResponseBody } from '@todo/FetchHttpClient';
+import { Chain, Interceptor, MediaType, HeaderMap, Request, ResponseBuilder, Response, ResponseBody } from '@todo/FetchHttpClient';
 import { ShapeTreeRequest } from '@core/ShapeTreeRequest';
 import { FetchShapeTreeRequest } from './FetchShapeTreeRequest';
 import { ResourceAccessor } from '@core/ResourceAccessor';
@@ -99,7 +99,7 @@ export class ValidatingShapeTreeInterceptor implements Interceptor {
   private createResponse(request: ShapeTreeRequest<Request>, response: ShapeTreeResponse): Response {
     const builder: ResponseBuilder = new ResponseBuilder();
     builder.code(response.getStatusCode());
-    const headers: Headers = FetchHelper.convertHeaders(response.getResponseHeaders());
+    const headers: HeaderMap = FetchHelper.convertHeaders(response.getResponseHeaders());
     builder.headers(headers);
     let contentType: string | undefined = (headers.get("Content-Type") || [undefined])[0];
     if (contentType === undefined) {

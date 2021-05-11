@@ -25,6 +25,7 @@ module.exports = {
     'no-await-in-loop': 'off', // @@ awaits appear in for loops. could be a Promise.all of a map
     'operator-linebreak': 'off', // @@ differs from java best practice?
     'nonblock-statement-body-position': 'off', // @@
+    'no-nested-ternary': 'off', // @@
     'no-continue': 'off',
     'prefer-template': 'off',
     'class-methods-use-this': 'off',

@@ -11,7 +11,19 @@ enum HttpRequestMethod {
   HEAD = 'HEAD', GET = 'GET', PUT = 'PUT', POST = 'POST', DELETE = 'DELETE'
 }
 
-type Headers = Map<string, string[]>;
+class HeaderMap extends Map<string, string[]> {
+  set(key: string, value: string[]): this {
+    return super.set(key.toLowerCase(), value);
+  }
+
+  get(key: string): string[] | undefined {
+    return super.get(key.toLowerCase());
+  }
+
+  has(key: string): boolean {
+    return super.has(key.toLowerCase());
+  }
+}
 
 class RequestBody {
   text: string | null;
@@ -31,7 +43,7 @@ class RequestBody {
 class RequestBuilder {
   private _url: URL | null = null;
 
-  _headers: Map<string, string[]> = new Map(); // EGP: need a multimap?
+  _headers: HeaderMap = new HeaderMap(); // EGP: need a multimap?
 
   method: HttpRequestMethod = HttpRequestMethod.GET;
 
@@ -39,13 +51,15 @@ class RequestBuilder {
 
   url(url: URL): RequestBuilder { this._url = url; return this; }
 
-  headers(newHeaders: Map<string, string[]>): RequestBuilder {
+  headers(newHeaders: HeaderMap): RequestBuilder {
     this._headers = newHeaders;
     return this;
   }
 
   addHeader(name: string, value: string): RequestBuilder {
-    this._headers.set(name, [value]);
+    const values = this._headers.get(name) || [];
+    values.push(value);
+    this._headers.set(name, values);
     return this;
   }
 
@@ -86,7 +100,7 @@ class Request {
   constructor(
     public method: HttpRequestMethod,
     url: URL | string,
-    public headers: Map<string, string[]>,
+    public headers: HeaderMap,
     public body: string | null,
   ) {
     this.url = typeof url === 'string' ? new URL(url) : url;
@@ -143,7 +157,10 @@ class FetchHttpClient {
 }
 
 class HttpCall {
-  constructor(public client: FetchHttpClient, public request: Request) { }
+  constructor(
+    public client: FetchHttpClient,
+    public request: Request,
+  ) { }
 
   // eslint-disable-next-line class-methods-use-this
   async execute(): Promise<Response> {
@@ -165,16 +182,16 @@ class HttpCall {
       try {
         // @@ should change to the more typed version below
         const resp = await fetch(request.url.href, parms);
-        const respHeaders: Headers = new Map();
+        const respHeaders: HeaderMap = new HeaderMap();
         // @ts-ignore: type doesn't include iterator symbol
         for (const [header, value] of resp.headers) {
           respHeaders.set(header, [value]);
         }
-        // const respHeaders: Headers = Object.entries(resp.headers)
-        //   .reduce((acc: Map<string, string[]>, pair) => {
+        // const respHeaders: HeaderMap = Object.entries(resp.headers)
+        //   .reduce((acc: HeaderMap, pair) => {
         //     acc.set(pair[0], [pair[1]]);
         //     return acc;
-        //   }, new Map());
+        //   }, new HeaderMap());
         const text: string = await resp.text();
         return new Response(resp.status, new ResponseBody(text, resp.headers.get('content-type')), respHeaders, request);
       } catch (e) {
@@ -193,17 +210,17 @@ class ChainImpl implements Chain {
 class ResponseBuilder {
   _code: number = 500;
   _body: ResponseBody = new ResponseBody('ResponseBuilder not initialized', 'text/plain');
-  _headers: Map<string, string[]> = new Map();
+  _headers: HeaderMap = new HeaderMap();
   _request: any;
   code(c: number): ResponseBuilder { this._code = c; return this; }
   body(b: ResponseBody): ResponseBuilder { this._body = b; return this; }
-  headers(h: Headers): ResponseBuilder { this._headers = h; return this; }
+  headers(h: HeaderMap): ResponseBuilder { this._headers = h; return this; }
   request(r: Request): ResponseBuilder { this._request = r; return this; }
   build(): Response { return new Response(this._code, this._body, this._headers, this._request); }
 }
 
 class Response {
-  constructor(code: number, body: ResponseBody, headers: Map<string, string[]>, request: Request | null = null) {
+  constructor(code: number, body: ResponseBody, headers: HeaderMap, request: Request | null = null) {
     this._code = code;
     this._message = Response.codeToMessage.get(code) || 'bummer';
     this._body = body;
@@ -225,7 +242,7 @@ class Response {
 
   isSuccessful(): boolean { return this._code.toString().startsWith('2'); }
 
-  _headers: Map<string, string[]> = new Map();
+  _headers: HeaderMap = new HeaderMap();
 
   headers() { return this._headers; }
 
@@ -282,7 +299,7 @@ class MediaType {
 
 export {
   Request,
-  Headers,
+  HeaderMap,
   RequestBody,
   HttpRequestMethod,
   RequestBuilder, // ericP: should be in a Request.Builder namespace to really be parallel
