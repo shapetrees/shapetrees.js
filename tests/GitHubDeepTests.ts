@@ -75,7 +75,7 @@ describe('GitHubDeepTests', () => {
       const newUrl: URL = await shapeTreeClient.plantShapeTree(
         context,
         u,
-        mockServer.urlFor('/static/shapetrees/github-deep/shapetree#root'),
+        [mockServer.urlFor('/static/shapetrees/github-deep/shapetree#root')],
         null, null, 'Git', null, TEXT_TURTLE,
       );
       expect(newUrl.href).to.equal(mockServer.urlFor('/ldp/data/Git/'));

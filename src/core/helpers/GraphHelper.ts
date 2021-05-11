@@ -62,10 +62,10 @@ export class GraphHelper {
       const ret = new Store();
       if (contentType === 'text/turtle') {
         const p = new Parser({ baseIRI: baseURI.href });
-        p.parse(rawContent, (error, quad, prefixes) => {
+        ret.addQuads(p.parse(rawContent/*, (error, quad, prefixes) => {
           if (error) throw error;
           if (quad) ret.addQuad(quad);
-        });
+        }*/));
       } else {
         throw Error(`unsupported content type: ${rawContent}`);
       }

@@ -41,7 +41,7 @@ export class ShapeTreeFactory {
       return this.localShapeTreeCache.get(shapeTreeURI.href) || null;
     }
 
-    this.dereferenceAndParseShapeTreeResource(shapeTreeURI);
+    await this.dereferenceAndParseShapeTreeResource(shapeTreeURI);
 
     return this.localShapeTreeCache.get(shapeTreeURI.href) || null;
   }
@@ -58,7 +58,8 @@ export class ShapeTreeFactory {
       const resource: NamedNode = nn(shapeTreeURI.toString());
       this.recursivelyParseShapeTree(model, resource);
     } catch (rnfe/*: RiotNotFoundException */) {
-      log.error('Unable to load graph at URI {}', shapeTreeURI); // @@ I suspect this should throw.
+      log.error('Unable to load graph at URI <%s>: %s', shapeTreeURI, rnfe.message); // @@ I suspect this should throw in shapetrees-java.
+      throw rnfe;
     }
   }
 
@@ -112,9 +113,6 @@ export class ShapeTreeFactory {
     if (shapeTree.getExpectedResourceType() === ShapeTreeVocabulary.SHAPETREE_CONTAINER) {
       const uris: NamedNode[] = expectTypes<NamedNode>(model, resource, nn(ShapeTreeVocabulary.CONTAINS),
         (term) => { throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`); });
-      if (uris.length === 0) {
-        throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains`);
-      }
       // if (uris.length === 0) {
       //   throw new ShapeTreeException(500, `Shape Tree ${resource.value} is a Container with no st:contains: ${dumpQuads([model, resource])}}`);
       // }
